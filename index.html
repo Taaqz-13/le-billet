@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Pour toi</title>
+<meta name="theme-color" content="#F7F1E7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pour toi">
+<meta name="robots" content="noindex, nofollow">
+<style>
+/* ============================================================
+   PALETTE : brique toulousaine, papier imprimé, encre bleu nuit
+   ============================================================ */
+:root{
+  --papier:#F7F1E7;
+  --papier2:#EFE5D5;
+  --papier3:#E5D8C4;
+  --encre:#22303F;
+  --encre2:#5C6B7A;
+  --brique:#C1553B;
+  --brique-fonce:#9E3F2B;
+  --brique-clair:#E28E6E;
+  --violette:#6B4E9B;
+  --or:#B58A2B;
+  --vert:#4A7C59;
+  --sat:env(safe-area-inset-top,0px);
+  --sab:env(safe-area-inset-bottom,0px);
+  --serif:ui-serif,Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,"SF Mono","Roboto Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+html,body{
+  min-height:100%;
+  background:var(--papier);
+  color:var(--encre);
+  font-family:var(--sans);
+  overscroll-behavior:none;
+  touch-action:manipulation;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* grain papier très subtil, en overlay fixe */
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.35;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='.5'/></svg>");
+  mix-blend-mode:multiply;
+}
+/* halo chaud en haut */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(120% 55% at 50% -8%, rgba(226,138,110,.28), transparent 62%);
+}
+
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+
+/* ---------- écrans ---------- */
+.wrap{
+  position:relative;z-index:1;
+  max-width:520px;margin:0 auto;
+  padding:calc(var(--sat) + 22px) 20px calc(var(--sab) + 28px);
+  min-height:100dvh;
+  display:flex;flex-direction:column;
+}
+.screen{display:none;flex:1;flex-direction:column;animation:in .45s cubic-bezier(.2,.7,.3,1) both}
+.screen.on{display:flex}
+@keyframes in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ---------- typo ---------- */
+.eyebrow{
+  font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--brique);font-weight:600;
+}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(32px,9vw,44px);line-height:1.05;letter-spacing:-.015em}
+h2{font-family:var(--serif);font-weight:400;font-size:clamp(23px,6vw,30px);line-height:1.18;letter-spacing:-.01em}
+p{font-size:16.5px;line-height:1.6;color:var(--encre2)}
+p strong{color:var(--encre);font-weight:600}
+.lead{font-size:17.5px;color:var(--encre)}
+
+/* ---------- boutons ---------- */
+.btn{
+  display:block;width:100%;min-height:56px;
+  background:var(--brique);color:#FFF6F0;
+  border-radius:3px;font-size:16.5px;font-weight:600;letter-spacing:.01em;
+  box-shadow:0 2px 0 var(--brique-fonce), 0 8px 22px -12px rgba(158,63,43,.9);
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.btn:active{transform:translateY(2px);box-shadow:0 0 0 var(--brique-fonce), 0 4px 14px -10px rgba(158,63,43,.9)}
+.btn.ghost{
+  background:transparent;color:var(--encre);
+  box-shadow:inset 0 0 0 1.5px var(--papier3);
+}
+
+/* choix de réponse */
+.choices{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.choice{
+  display:flex;align-items:center;gap:14px;
+  width:100%;min-height:60px;padding:14px 18px;
+  background:rgba(255,255,255,.6);
+  box-shadow:inset 0 0 0 1.5px var(--papier3);
+  border-radius:3px;text-align:left;font-size:16.5px;line-height:1.3;
+  transition:transform .12s ease, box-shadow .16s ease, background .16s ease, opacity .3s ease;
+}
+.choice:active{transform:scale(.985)}
+.choice .mark{
+  flex:0 0 26px;height:26px;border-radius:50%;
+  box-shadow:inset 0 0 0 1.5px var(--papier3);
+  font-family:var(--mono);font-size:12px;color:var(--encre2);
+  display:flex;align-items:center;justify-content:center;transition:all .2s ease;
+}
+.choice.good{background:rgba(74,124,89,.13);box-shadow:inset 0 0 0 2px var(--vert)}
+.choice.good .mark{background:var(--vert);color:#fff;box-shadow:none}
+.choice.bad{background:rgba(193,85,59,.09);box-shadow:inset 0 0 0 2px var(--brique);opacity:.85}
+.choice.bad .mark{background:var(--brique);color:#fff;box-shadow:none}
+.choice.off{opacity:.32;pointer-events:none;text-decoration:line-through;text-decoration-color:var(--papier3)}
+.choice[disabled]{pointer-events:none}
+
+/* ---------- le billet ---------- */
+.ticket{
+  position:relative;background:#FFFCF6;border-radius:4px;
+  box-shadow:0 1px 0 rgba(34,48,63,.06), 0 18px 40px -26px rgba(34,48,63,.55);
+  overflow:hidden;
+}
+/* perforations latérales */
+.ticket::before,.ticket::after{
+  content:"";position:absolute;top:0;bottom:0;width:9px;
+  background-image:radial-gradient(circle at 50% 50%, var(--papier) 3.6px, transparent 3.8px);
+  background-size:9px 15px;
+}
+.ticket::before{left:-4.5px}
+.ticket::after{right:-4.5px}
+
+.ticket-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 16px;background:var(--brique);color:#FFF6F0;
+}
+.ticket-head .co{font-family:var(--mono);font-size:11px;letter-spacing:.2em;font-weight:600}
+.ticket-head .cls{font-family:var(--mono);font-size:10px;letter-spacing:.12em;opacity:.85}
+
+.ticket-route{
+  display:flex;align-items:flex-end;gap:10px;
+  padding:18px 16px 14px;border-bottom:1.5px dashed var(--papier3);
+}
+.ticket-route .city{flex:1;min-width:0}
+.ticket-route .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--encre2);text-transform:uppercase}
+.ticket-route .nm{font-family:var(--serif);font-size:clamp(19px,5.4vw,25px);line-height:1.1;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ticket-route .nm.masked{color:var(--brique);letter-spacing:.06em}
+.ticket-route .arrow{flex:0 0 auto;padding-bottom:5px;color:var(--brique);font-size:19px}
+
+.ticket-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5px;background:var(--papier2)}
+.cell{background:#FFFCF6;padding:12px 16px;min-height:66px;position:relative;overflow:hidden}
+.cell .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--encre2);text-transform:uppercase}
+.cell .val{font-family:var(--mono);font-size:14.5px;font-weight:600;margin-top:5px;line-height:1.28;color:var(--encre)}
+.cell .val .sub{display:block;font-weight:400;font-size:11.5px;color:var(--encre2);margin-top:2px}
+/* case verrouillée : bandes diagonales.
+   Le .sub redéclare sa couleur, il faut donc le neutraliser explicitement,
+   sinon la moitié des infos du billet fuite avant la première question. */
+.cell.locked .val,
+.cell.locked .val .sub{color:transparent}
+.cell.locked::after,
+.cell.locked::before{
+  content:"";position:absolute;border-radius:2px;
+  background:repeating-linear-gradient(-45deg,var(--papier2) 0 5px,#FFFCF6 5px 10px);
+}
+.cell.locked::after {left:16px;right:16px;top:30px;height:15px}   /* la valeur */
+.cell.locked::before{left:16px;right:42%;top:50px;height:11px}    /* la sous-ligne */
+.cell.pop{animation:pop .6s cubic-bezier(.2,.8,.3,1) both}
+@keyframes pop{
+  0%{background:#FFF3D9}
+  55%{background:#FFF3D9}
+  100%{background:#FFFCF6}
+}
+.ticket-foot{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:11px 16px;border-top:1.5px dashed var(--papier3);
+}
+.barcode{display:flex;gap:1.5px;height:26px;align-items:stretch;flex:1}
+.barcode i{background:var(--encre);border-radius:.5px}
+.ticket-foot .ref{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--encre2);white-space:nowrap}
+
+/* mini billet pendant le quiz */
+.ticket.mini{transform-origin:top center}
+.ticket.mini .ticket-route{padding:13px 14px 11px}
+.ticket.mini .cell{min-height:56px;padding:9px 14px}
+.ticket.mini .cell .val{font-size:12.5px}
+.ticket.mini .cell.locked::after {left:14px;right:14px;top:26px;height:13px}
+.ticket.mini .cell.locked::before{left:14px;right:42%;top:43px;height:10px}
+.ticket.mini .ticket-foot{display:none}
+
+/* ---------- lettres récoltées ---------- */
+.letters{display:flex;justify-content:center;gap:6px;margin:22px 0 4px}
+.letters span{
+  flex:0 0 auto;width:clamp(28px,8.4vw,36px);height:clamp(38px,11vw,48px);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:clamp(19px,5.6vw,25px);
+  background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 1.5px var(--papier3);
+  border-radius:2px;color:var(--papier3);
+}
+.letters span.got{color:var(--brique);background:#FFFCF6;box-shadow:inset 0 0 0 2px var(--brique-clair);animation:flip .5s cubic-bezier(.2,.8,.3,1) both}
+@keyframes flip{from{transform:rotateX(-88deg);opacity:0}to{transform:none;opacity:1}}
+
+/* ---------- progression ---------- */
+.dots{display:flex;gap:7px;justify-content:center;padding:14px 0 4px}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--papier3);transition:all .3s ease}
+.dots i.on{background:var(--brique);transform:scale(1.35)}
+.dots i.done{background:var(--brique-clair)}
+
+/* ---------- feedback ---------- */
+.feedback{
+  margin-top:16px;padding:14px 16px;border-radius:3px;font-size:15px;line-height:1.5;
+  display:none;animation:in .3s ease both;
+}
+.feedback.on{display:block}
+.feedback.miss{background:rgba(193,85,59,.09);color:var(--brique-fonce);box-shadow:inset 0 0 0 1.5px rgba(193,85,59,.25)}
+.feedback.hit{background:rgba(74,124,89,.11);color:#2F5C3C;box-shadow:inset 0 0 0 1.5px rgba(74,124,89,.28)}
+.feedback b{font-weight:600}
+
+/* ---------- grattage ---------- */
+.scratch-wrap{
+  position:relative;width:100%;aspect-ratio:16/8.2;
+  border-radius:4px;overflow:hidden;margin-top:6px;
+  box-shadow:0 18px 40px -26px rgba(34,48,63,.6), inset 0 0 0 1.5px var(--papier3);
+  background:#FFFCF6;
+}
+.scratch-under{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;
+  background:linear-gradient(150deg,#FFFCF6,#F6E7DC);
+  /* anti-spoil : la destination reste invisible tant que la couche
+     à gratter n'est pas réellement posée sur le canvas */
+  visibility:hidden;
+}
+.scratch-wrap.ready .scratch-under{visibility:visible}
+.scratch-under .big{
+  font-family:var(--serif);font-size:clamp(30px,10.4vw,50px);letter-spacing:.02em;
+  color:var(--brique);line-height:1;
+}
+.scratch-under .small{font-family:var(--mono);font-size:10.5px;letter-spacing:.24em;color:var(--encre2);text-transform:uppercase}
+#scratch{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#scratch.gone{opacity:0;transition:opacity .55s ease;pointer-events:none}
+
+/* ---------- reveal ---------- */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+.countdown{
+  margin-top:18px;padding:16px;border-radius:3px;text-align:center;
+  background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 1.5px var(--papier3);
+}
+.countdown .j{font-family:var(--serif);font-size:38px;line-height:1;color:var(--brique)}
+.countdown .d{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--encre2);margin-top:8px}
+.note{
+  margin-top:18px;padding:20px 18px;border-radius:3px;
+  background:rgba(107,78,155,.07);box-shadow:inset 0 0 0 1.5px rgba(107,78,155,.2);
+}
+.note .sig{
+  font-family:var(--serif);font-size:17px;line-height:1.55;color:var(--encre);
+}
+.note .from{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--violette);margin-bottom:10px}
+
+.spacer{flex:1;min-height:16px}
+.stack{display:flex;flex-direction:column;gap:12px;margin-top:22px}
+.mt{margin-top:14px}
+.mt-l{margin-top:26px}
+.center{text-align:center}
+</style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+
+<div class="wrap">
+
+  <!-- ============ ÉCRAN 1 : ACCUEIL ============ -->
+  <section class="screen on" id="s-intro">
+    <div class="spacer"></div>
+    <div class="eyebrow" id="intro-date">23 août 2026</div>
+    <h1 class="mt" id="intro-title">Nathalie,<br>22 ans.</h1>
+    <p class="lead mt-l">Cette année, il n'y a pas de paquet à ouvrir.</p>
+    <p class="mt">Ton cadeau est déjà réservé, il est déjà payé, et il part sans toi si tu ne trouves pas où il va.</p>
+    <p class="mt"><strong>Quatre indices. C'est tout ce que je te donne.</strong></p>
+    <div class="spacer"></div>
+    <button class="btn" id="go">Bon. Je regarde ça.</button>
+  </section>
+
+  <!-- ============ ÉCRAN 2 : LES ÉNIGMES ============ -->
+  <section class="screen" id="s-quiz">
+    <div class="ticket mini" id="mini-ticket"></div>
+    <div class="dots" id="dots"></div>
+    <h2 class="mt" id="q-title">Question</h2>
+    <p class="mt" id="q-text">Texte</p>
+    <div class="choices" id="choices"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="btn" id="next" style="display:none;margin-top:18px">Suivant</button>
+    <div class="spacer"></div>
+  </section>
+
+  <!-- ============ ÉCRAN 3 : LA TENSION ============ -->
+  <section class="screen" id="s-almost">
+    <div class="spacer"></div>
+    <div class="eyebrow center">Quatre sur quatre</div>
+    <h2 class="mt center">Tu as tout trouvé.</h2>
+    <div class="letters" id="letters-big"></div>
+    <p class="mt-l center">Une couleur, des avions, une fleur, un fleuve. Il ne reste plus qu'un mot à lire.</p>
+    <p class="mt center"><strong>Tu as déjà une idée, non ?</strong></p>
+    <div class="spacer"></div>
+    <button class="btn" id="to-scratch">Vérifier</button>
+  </section>
+
+  <!-- ============ ÉCRAN 4 : LE GRATTAGE ============ -->
+  <section class="screen" id="s-scratch">
+    <div class="spacer"></div>
+    <div class="eyebrow center">Destination</div>
+    <h2 class="mt center" style="margin-bottom:18px">Gratte avec ton doigt.</h2>
+    <div class="scratch-wrap">
+      <div class="scratch-under">
+        <div class="small">Tu descends à</div>
+        <div class="big" id="dest-word">TOULOUSE</div>
+        <div class="small" id="dest-station">Gare Matabiau</div>
+      </div>
+      <canvas id="scratch"></canvas>
+    </div>
+    <p class="mt center" id="scratch-hint" style="font-size:14px">Frotte l'écran, comme un ticket à gratter.</p>
+    <div class="spacer"></div>
+    <button class="btn ghost" id="skip-scratch" style="display:none">Montre-moi directement</button>
+  </section>
+
+  <!-- ============ ÉCRAN 5 : LE REVEAL ============ -->
+  <section class="screen" id="s-reveal">
+    <div class="eyebrow">Ton cadeau</div>
+    <h2 class="mt" id="reveal-title">Trois nuits à Toulouse.</h2>
+    <p class="mt">Les billets sont pris. Tu n'as rien à faire, à part être prête.</p>
+    <div class="mt-l" id="full-ticket-slot"></div>
+    <div class="countdown">
+      <div class="j" id="cd-j">J-19</div>
+      <div class="d" id="cd-d">Chargement</div>
+    </div>
+    <div class="note">
+      <div class="from" id="note-from">Un mot pour toi</div>
+      <div class="sig" id="note-text">Joyeux anniversaire.</div>
+    </div>
+    <div class="stack">
+      <button class="btn ghost" id="replay">Recommencer depuis le début</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ================================================================
+   CONFIG : tout ce qui se personnalise est ICI et nulle part ailleurs
+   ================================================================ */
+const CONFIG = {
+  prenom: "Nathalie",
+  age: 22,
+  dateAnniv: "23 août 2026",
+
+  depart: {
+    ville: "Marseille",
+    gare: "Saint-Charles",
+    jour: "Vendredi 11 septembre",
+    heure: "17h22",
+    arrivee: "21h19",
+    duree: "3 h 57 de train",
+    // compte à rebours : année, mois (0 = janvier), jour, heure, minute
+    stamp: [2026, 8, 11, 17, 22]
+  },
+  retour: {
+    jour: "Lundi 14 septembre",
+    heure: "16h42",
+    arrivee: "20h36"
+  },
+  destination: {
+    ville: "TOULOUSE",
+    gare: "Gare Matabiau"
+  },
+  nuits: 3,
+  nuitsMot: "Trois",
+
+  /* >>> REMPLACE CE TEXTE PAR TES MOTS À TOI <<< */
+  motTitre: "Un mot pour toi",
+  motFinal: "Joyeux anniversaire. Trois jours rien que nous deux, loin d'ici. Prépare ta valise, je m'occupe du reste."
+};
+
+/* ================================================================
+   LES QUATRE ÉNIGMES
+   Chacune débloque une case du billet + une lettre de la destination
+   ================================================================ */
+const ENIGMES = [
+  {
+    titre: "Premier indice",
+    texte: "Cette ville a une couleur. Pas un drapeau, pas un maillot : une vraie couleur, celle de ses murs. Au coucher du soleil, elle vire carrément à l'orange.",
+    options: ["Rose", "Blanche", "Bleue", "Grise"],
+    bonne: 0,
+    indice: "On la surnomme comme ça, et c'est écrit sur toutes les cartes postales.",
+    apres: "Rose. On l'appelle la Ville Rose, et ce ne sont pas des murs peints : c'est la brique.",
+    cell: 0,
+    lettre: 0
+  },
+  {
+    titre: "Deuxième indice",
+    texte: "Dans cette ville, on assemble des engins de 70 mètres de long qui pèsent 250 tonnes. Et pourtant, ils décollent avec 500 personnes à bord.",
+    options: ["Des bateaux", "Des avions", "Des grues", "Des tracteurs"],
+    bonne: 1,
+    indice: "500 personnes à bord, et ça ne touche plus le sol pendant douze heures.",
+    apres: "Des avions. Airbus est ici, et la ville entière tourne autour.",
+    cell: 1,
+    lettre: 1
+  },
+  {
+    titre: "Troisième indice",
+    texte: "Elle a une fleur officielle. Minuscule, et elle sent tellement fort qu'on en a fait des bonbons, du parfum, et même de la liqueur.",
+    options: ["La lavande", "Le mimosa", "La violette", "Le coquelicot"],
+    bonne: 2,
+    indice: "Sa couleur porte le même nom qu'elle. Un violet foncé, presque bleu.",
+    apres: "La violette. Il y a même une confrérie sur place pour la protéger.",
+    cell: 2,
+    lettre: 3
+  },
+  {
+    titre: "Dernier indice",
+    texte: "Un fleuve la traverse en plein centre. Il naît en Espagne, il finit dans l'Atlantique, et l'été tout le monde dîne sur ses quais jusqu'à la nuit.",
+    options: ["Le Rhône", "La Loire", "La Seine", "La Garonne"],
+    bonne: 3,
+    indice: "Ce n'est ni Paris, ni Lyon, ni les châteaux. On est dans le Sud-Ouest.",
+    apres: "La Garonne. Et le Canal du Midi part d'ici pour rejoindre la Méditerranée.",
+    cell: 3,
+    lettre: 6
+  }
+];
+
+/* réactions quand elle se trompe : jamais méchant, toujours complice */
+const RATES = [
+  "Non. Mais j'aime beaucoup l'idée.",
+  "Toujours pas. Je t'enlève ce qui n'a aucune chance.",
+  "Il n'en reste qu'une. Tu ne peux plus te tromper."
+];
+
+/* ================================================================
+   ÉTAT
+   ================================================================ */
+let idx = 0;
+let essais = 0;
+const trouvees = new Set();
+const $ = id => document.getElementById(id);
+
+/* ================================================================
+   LE BILLET
+   ================================================================ */
+const CELLS = [
+  { lbl:"Date aller", val:()=>CONFIG.depart.jour,
+    sub:()=>"Gare " + CONFIG.depart.gare },
+  { lbl:"Trajet",     val:()=>CONFIG.depart.heure + " → " + CONFIG.depart.arrivee,
+    sub:()=>CONFIG.depart.duree },
+  { lbl:"Retour",     val:()=>CONFIG.retour.jour,
+    sub:()=>CONFIG.retour.heure + " → " + CONFIG.retour.arrivee },
+  { lbl:"Durée",      val:()=>CONFIG.nuits + " nuits",
+    sub:()=>"Du vendredi au lundi" }
+];
+
+function barcode(){
+  const seed = [3,1,2,1,4,2,1,3,1,1,2,4,1,2,3,1,4,1,2,2,3,1,1,4,2,1,3,2,1,2];
+  return seed.map(w => '<i style="width:' + w + 'px"></i>').join("");
+}
+
+function buildTicket(opts){
+  const full = !!(opts && opts.full);
+
+  const cells = CELLS.map((c,i)=>{
+    const open = full || trouvees.has(i);
+    return '<div class="cell' + (open ? '' : ' locked') + '" data-cell="' + i + '">' +
+             '<div class="lbl">' + c.lbl + '</div>' +
+             '<div class="val">' + c.val() + '<span class="sub">' + c.sub() + '</span></div>' +
+           '</div>';
+  }).join("");
+
+  const dest = full
+    ? '<div class="nm">' + CONFIG.destination.ville + '</div>'
+    : '<div class="nm masked">? ? ? ? ?</div>';
+
+  return '<div class="ticket-head">' +
+           '<span class="co">BILLET NOMINATIF</span>' +
+           '<span class="cls">NON ÉCHANGEABLE</span>' +
+         '</div>' +
+         '<div class="ticket-route">' +
+           '<div class="city">' +
+             '<div class="lbl">Départ</div>' +
+             '<div class="nm">' + CONFIG.depart.ville.toUpperCase() + '</div>' +
+           '</div>' +
+           '<div class="arrow">&#10230;</div>' +
+           '<div class="city" style="text-align:right">' +
+             '<div class="lbl">Arrivée</div>' + dest +
+           '</div>' +
+         '</div>' +
+         '<div class="ticket-grid">' + cells + '</div>' +
+         (full
+           ? '<div class="ticket-foot"><div class="barcode">' + barcode() + '</div>' +
+             '<div class="ref">' + CONFIG.prenom.toUpperCase() + ' / ' + CONFIG.age + ' ANS</div></div>'
+           : '');
+}
+
+function paintMini(popCell){
+  $("mini-ticket").innerHTML = buildTicket({});
+  if (popCell !== undefined){
+    const el = $("mini-ticket").querySelector('[data-cell="' + popCell + '"]');
+    if (el) el.classList.add("pop");
+  }
+}
+
+/* ================================================================
+   LES LETTRES DE LA DESTINATION
+   ================================================================ */
+function paintLetters(target, all){
+  const mot = CONFIG.destination.ville;
+  const revelees = new Set(ENIGMES.filter(e => trouvees.has(e.cell)).map(e => e.lettre));
+  target.innerHTML = [...mot].map((ch,i)=>{
+    const got = all || revelees.has(i);
+    return '<span class="' + (got ? "got" : "") + '">' + (got ? ch : "") + '</span>';
+  }).join("");
+}
+
+/* ================================================================
+   PROGRESSION
+   ================================================================ */
+function paintDots(){
+  $("dots").innerHTML = ENIGMES.map((_,i)=>
+    '<i class="' + (i < idx ? "done" : i === idx ? "on" : "") + '"></i>'
+  ).join("");
+}
+
+/* ================================================================
+   AFFICHER UNE ÉNIGME
+   ================================================================ */
+function showEnigme(){
+  const e = ENIGMES[idx];
+  essais = 0;
+  /* on remonte : sinon elle enchaîne sur la question suivante en restant
+     scrollée en bas, et elle ne voit jamais l'énoncé */
+  window.scrollTo({ top:0, behavior:"smooth" });
+  paintMini();
+  paintDots();
+  $("q-title").textContent = e.titre;
+  $("q-text").textContent = e.texte;
+  $("feedback").className = "feedback";
+  $("next").style.display = "none";
+
+  $("choices").innerHTML = e.options.map((o,i)=>
+    '<button class="choice" data-i="' + i + '">' +
+      '<span class="mark">' + "ABCD"[i] + '</span><span>' + o + '</span>' +
+    '</button>'
+  ).join("");
+
+  [...$("choices").children].forEach(btn=>{
+    btn.addEventListener("click", ()=>repondre(parseInt(btn.dataset.i,10), btn));
+  });
+}
+
+function repondre(i, btn){
+  const e  = ENIGMES[idx];
+  const fb = $("feedback");
+
+  /* bonne réponse */
+  if (i === e.bonne){
+    btn.classList.add("good");
+    btn.querySelector(".mark").textContent = "✓";
+    [...$("choices").children].forEach(b => b.setAttribute("disabled",""));
+    buzz(18);
+
+    trouvees.add(e.cell);
+    paintMini(e.cell);
+
+    fb.className = "feedback hit on";
+    fb.innerHTML = "<b>Exact.</b> " + e.apres;
+
+    $("next").textContent = (idx === ENIGMES.length - 1)
+      ? "Voir ce que ça donne"
+      : "Indice suivant";
+    $("next").style.display = "block";
+    /* le bouton tombe sous la ligne de flottaison sur la plupart des
+       téléphones : on l'amène à elle plutôt que d'attendre qu'elle scrolle */
+    setTimeout(()=>$("next").scrollIntoView({ behavior:"smooth", block:"end" }), 150);
+    return;
+  }
+
+  /* mauvaise réponse : on retire l'option et on aide. Elle ne peut jamais bloquer. */
+  essais++;
+  btn.classList.add("bad");
+  btn.querySelector(".mark").textContent = "×";
+  btn.classList.add("off");
+  buzz(8);
+
+  const reste = [...$("choices").children].filter(b => !b.classList.contains("off")).length;
+  const msg = RATES[Math.min(essais, RATES.length) - 1];
+
+  fb.className = "feedback miss on";
+  fb.innerHTML = "<b>" + msg + "</b>" + (reste > 1 ? " " + e.indice : "");
+  setTimeout(()=>fb.scrollIntoView({ behavior:"smooth", block:"end" }), 150);
+}
+
+/* petite vibration si le téléphone le permet */
+function buzz(ms){ try{ if (navigator.vibrate) navigator.vibrate(ms); }catch(_){} }
+
+/* ================================================================
+   NAVIGATION ENTRE ÉCRANS
+   ================================================================ */
+function show(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("on"));
+  $(id).classList.add("on");
+  window.scrollTo(0,0);
+}
+
+$("go").addEventListener("click", ()=>{ show("s-quiz"); showEnigme(); });
+
+$("next").addEventListener("click", ()=>{
+  idx++;
+  if (idx < ENIGMES.length){
+    showEnigme();
+  } else {
+    paintLetters($("letters-big"), false);
+    show("s-almost");
+  }
+});
+
+$("to-scratch").addEventListener("click", ()=>{
+  show("s-scratch");
+  /* appel direct : getBoundingClientRect force le reflow, le rect est déjà bon.
+     Surtout, on ne dépend PAS de requestAnimationFrame, qui reste gelé si le
+     téléphone se verrouille ou passe en arrière-plan pile à cet instant. */
+  initScratch();
+  setTimeout(()=>{ if (!scratchReady) initScratch(); }, 150);
+  /* filet de sécurité : si le grattage ne prend pas au bout de 12 s */
+  setTimeout(()=>{
+    if ($("s-scratch").classList.contains("on") && !done){
+      $("skip-scratch").style.display = "block";
+    }
+  }, 12000);
+});
+
+$("skip-scratch").addEventListener("click", revealDone);
+$("replay").addEventListener("click", ()=>location.reload());
+
+/* ================================================================
+   GRATTAGE
+   ================================================================ */
+const cv  = $("scratch");
+const ctx = cv.getContext("2d", { willReadFrequently:true });
+let scratching = false, scratchReady = false, done = false, lastPt = null;
+
+let tentatives = 0;
+function initScratch(){
+  const r = cv.getBoundingClientRect();
+  if (r.width < 10){
+    if (++tentatives < 25) setTimeout(initScratch, 100);
+    return;
+  }
+  tentatives = 0;
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  cv.width  = Math.round(r.width  * dpr);
+  cv.height = Math.round(r.height * dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.globalCompositeOperation = "source-over";
+
+  /* la couche à gratter : argent métallisé */
+  const g = ctx.createLinearGradient(0,0,r.width,r.height);
+  g.addColorStop(0,   "#B9BFC6");
+  g.addColorStop(.28, "#DDE2E6");
+  g.addColorStop(.5,  "#A9B1B9");
+  g.addColorStop(.72, "#D5DBE0");
+  g.addColorStop(1,   "#9EA7AF");
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,r.width,r.height);
+
+  /* texture rayée */
+  ctx.globalAlpha = .07;
+  ctx.strokeStyle = "#5C6B7A";
+  ctx.lineWidth = 1;
+  for (let x = -r.height; x < r.width; x += 5){
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x + r.height, r.height); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  /* consigne imprimée sur la couche */
+  ctx.fillStyle = "rgba(34,48,63,.42)";
+  ctx.font = "600 " + Math.round(r.width * .038) + "px ui-monospace, Menlo, monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("G R A T T E   I C I", r.width/2, r.height/2);
+
+  ctx.globalCompositeOperation = "destination-out";
+  scratchReady = true;
+  done = false;
+  checkTick = 0;
+  cv.classList.remove("gone");
+  /* la couche est posée : on autorise enfin l'affichage de ce qu'il y a dessous */
+  cv.parentElement.classList.add("ready");
+}
+
+/* si elle tourne son téléphone en plein grattage, on repose une couche propre */
+let resizeT = null;
+window.addEventListener("resize", ()=>{
+  if (done || !$("s-scratch").classList.contains("on")) return;
+  clearTimeout(resizeT);
+  resizeT = setTimeout(initScratch, 200);
+});
+
+function ptFrom(ev){
+  const r = cv.getBoundingClientRect();
+  const src = (ev.touches && ev.touches[0]) ? ev.touches[0] : ev;
+  return { x: src.clientX - r.left, y: src.clientY - r.top };
+}
+
+function erase(p){
+  const r = cv.getBoundingClientRect();
+  const rad = Math.max(18, r.width * .075);
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, rad, 0, Math.PI*2);
+  ctx.fill();
+  if (lastPt){
+    ctx.lineWidth = rad * 2;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(lastPt.x, lastPt.y);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  }
+  lastPt = p;
+}
+
+let checkTick = 0;
+function checkProgress(){
+  if (++checkTick % 6 !== 0) return;
+  const img = ctx.getImageData(0,0,cv.width,cv.height).data;
+  let clear = 0, total = 0;
+  for (let i = 3; i < img.length; i += 4 * 24){ total++; if (img[i] < 40) clear++; }
+  if (total && clear / total > .48) revealDone();
+}
+
+function onStart(ev){
+  if (!scratchReady || done) return;
+  ev.preventDefault();
+  scratching = true; lastPt = null;
+  erase(ptFrom(ev));
+  $("scratch-hint").textContent = "Continue, ça vient.";
+}
+function onMove(ev){
+  if (!scratching || done) return;
+  ev.preventDefault();
+  erase(ptFrom(ev));
+  checkProgress();
+}
+function onEnd(){ scratching = false; lastPt = null; }
+
+cv.addEventListener("touchstart", onStart, { passive:false });
+cv.addEventListener("touchmove",  onMove,  { passive:false });
+cv.addEventListener("touchend",   onEnd);
+cv.addEventListener("mousedown",  onStart);
+cv.addEventListener("mousemove",  onMove);
+window.addEventListener("mouseup", onEnd);
+
+function revealDone(){
+  if (done) return;
+  done = true;
+  /* cas du bouton de secours : la couche n'a jamais été posée, il faut
+     quand même rendre la destination visible sous le canvas qui s'efface */
+  cv.parentElement.classList.add("ready");
+  cv.classList.add("gone");
+  buzz([16,60,16,60,30]);
+  setTimeout(()=>{
+    $("full-ticket-slot").className = "ticket";
+    $("full-ticket-slot").innerHTML = buildTicket({ full:true });
+    show("s-reveal");
+    startCountdown();
+    confetti();
+  }, 900);
+}
+
+/* ================================================================
+   COMPTE À REBOURS
+   ================================================================ */
+const S = CONFIG.depart.stamp;
+const CIBLE = new Date(S[0], S[1], S[2], S[3], S[4], 0);
+let cdTimer = null;
+
+function startCountdown(){
+  const tick = ()=>{
+    const diff = CIBLE - new Date();
+    if (diff <= 0){
+      $("cd-j").textContent = "C'est maintenant";
+      $("cd-d").textContent = "Le train est là";
+      if (cdTimer) clearInterval(cdTimer);
+      return;
+    }
+    const j = Math.floor(diff / 86400000);
+    const h = Math.floor(diff % 86400000 / 3600000);
+    const m = Math.floor(diff % 3600000 / 60000);
+    const s = Math.floor(diff % 60000 / 1000);
+    $("cd-j").textContent = "J-" + j;
+    $("cd-d").textContent = j + " jours, " + h + " h " +
+      String(m).padStart(2,"0") + " min " + String(s).padStart(2,"0") + " s";
+  };
+  tick();
+  if (cdTimer) clearInterval(cdTimer);
+  cdTimer = setInterval(tick, 1000);
+}
+
+/* ================================================================
+   CONFETTIS (maison, sans librairie)
+   ================================================================ */
+function confetti(){
+  const c = $("confetti"), cx = c.getContext("2d");
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const W = window.innerWidth, H = window.innerHeight;
+  c.width = W*dpr; c.height = H*dpr;
+  cx.setTransform(dpr,0,0,dpr,0,0);
+
+  const cols = ["#C1553B","#E28E6E","#6B4E9B","#B58A2B","#4A7C59","#FFFCF6"];
+  const parts = [];
+  for (let i = 0; i < 130; i++){
+    parts.push({
+      x: Math.random()*W,
+      y: -20 - Math.random()*H*.6,
+      w: 5 + Math.random()*7,
+      h: 8 + Math.random()*10,
+      vy: 1.6 + Math.random()*2.6,
+      vx: -1 + Math.random()*2,
+      rot: Math.random()*Math.PI,
+      vr: -.12 + Math.random()*.24,
+      col: cols[(Math.random()*cols.length)|0]
+    });
+  }
+
+  let frames = 0;
+  (function loop(){
+    cx.clearRect(0,0,W,H);
+    let alive = 0;
+    for (const p of parts){
+      p.y += p.vy;
+      p.x += p.vx + Math.sin((p.y + p.rot*40)/45)*.7;
+      p.rot += p.vr;
+      if (p.y < H + 40) alive++;
+      cx.save();
+      cx.translate(p.x, p.y);
+      cx.rotate(p.rot);
+      cx.fillStyle = p.col;
+      cx.globalAlpha = frames > 260 ? Math.max(0, 1 - (frames-260)/90) : 1;
+      cx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      cx.restore();
+    }
+    frames++;
+    if (alive && frames < 360) requestAnimationFrame(loop);
+    else cx.clearRect(0,0,W,H);
+  })();
+}
+
+/* ================================================================
+   INJECTION DE LA CONFIG DANS LES TEXTES
+   ================================================================ */
+(function hydrate(){
+  $("intro-date").textContent   = CONFIG.dateAnniv;
+  $("intro-title").innerHTML    = CONFIG.prenom + ",<br>" + CONFIG.age + " ans.";
+  $("dest-word").textContent    = CONFIG.destination.ville;
+  $("dest-station").textContent = CONFIG.destination.gare;
+
+  const villeJolie = CONFIG.destination.ville.charAt(0) +
+                     CONFIG.destination.ville.slice(1).toLowerCase();
+  $("reveal-title").textContent = CONFIG.nuitsMot + " nuits à " + villeJolie + ".";
+  $("note-from").textContent    = CONFIG.motTitre;
+  $("note-text").textContent    = CONFIG.motFinal;
+
+  paintMini();
+  paintDots();
+})();
+</script>
+</body>
+</html>
