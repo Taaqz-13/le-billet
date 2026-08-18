@@ -300,7 +300,7 @@ p strong{color:var(--encre);font-weight:600}
     <div class="spacer"></div>
     <div class="eyebrow center">🔒 Billet nominatif</div>
     <h2 class="mt center">Il te faut le code.</h2>
-    <p class="mt center" id="code-aide">Il est écrit sur la carte que je t'ai donnée.</p>
+    <p class="mt center" id="code-aide">Chargement...</p>
     <div class="cases" id="cases" style="margin-top:22px"><i></i><i></i><i></i><i></i></div>
     <div class="pave" id="pave"></div>
     <div class="spacer"></div>
@@ -424,9 +424,18 @@ const CONFIG = {
   age: 22,
   dateAnniv: "23 août 2026",
 
-  /* Code d'entree. ATTENTION : il sert aussi de cle de dechiffrement des
-     photos. Si tu le changes, relance  python chiffre-photos.py NOUVEAUCODE */
-  code: "2308",
+  /* Le code n'est PAS ecrit ici : il est la cle de dechiffrement des photos,
+     donc l'inscrire en clair reviendrait a la donner. Pour le changer :
+        python chiffre-photos.py NOUVEAUCODE
+     puis adapte les indices ci-dessous (du plus vague au plus explicite).
+     Le dernier doit permettre de trouver a coup sur : elle ne doit jamais
+     rester bloquee devant son propre cadeau. */
+  indicesCode: [
+    "4 chiffres : le jour où on s'est mis ensemble. Le jour, puis le mois. 💛",
+    "Presque. C'était en hiver, et le mois s'écrit avec un zéro devant.",
+    "Janvier. Il ne te manque plus que le jour. 🙂",
+    "Le 29 janvier. Le jour d'abord, le mois ensuite."
+  ],
 
   depart: {
     ville: "Marseille", gare: "Saint-Charles",
@@ -1117,6 +1126,8 @@ async function dechiffre(nom, code){
   return URL.createObjectURL(new Blob([clair], { type:"image/jpeg" }));
 }
 
+let ratesCode = 0;
+
 async function valideCode(){
   if (saisie.length < 4) return;
   const code = saisie;
@@ -1131,11 +1142,15 @@ async function valideCode(){
     buzz([14,50,14]);
     show("s-intro");
   } catch (err) {
+    /* l'indice devient plus explicite a chaque essai : le dernier donne
+       la reponse. Bloquer a l'entree du cadeau serait le pire scenario. */
+    ratesCode++;
     saisie = ""; paintCases();
     $("cases").classList.remove("secoue");
     void $("cases").offsetWidth;
     $("cases").classList.add("secoue");
-    $("code-aide").textContent = "Ce n'est pas le bon code. Réessaie. 🙃";
+    const i = Math.min(ratesCode, CONFIG.indicesCode.length - 1);
+    $("code-aide").textContent = CONFIG.indicesCode[i];
     buzz([40,60,40]);
   }
 }
@@ -1157,6 +1172,7 @@ $("go").addEventListener("click", ()=>{ etape = 0; lanceEtape(); });
   $("reveal-title").textContent = CONFIG.nuitsMot + " nuits à " + ville + ".";
   $("note-from").textContent    = CONFIG.motTitre;
   $("note-text").textContent    = CONFIG.motFinal;
+  $("code-aide").textContent    = CONFIG.indicesCode[0];
   construitPave();
   paintCases();
   paintMinis();
