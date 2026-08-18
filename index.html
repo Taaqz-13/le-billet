@@ -28,7 +28,7 @@
   --sab:env(safe-area-inset-bottom,0px);
   --serif:ui-serif,Georgia,"Times New Roman",serif;
   --mono:ui-monospace,"SF Mono","Roboto Mono",Menlo,Consolas,monospace;
-  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,"Apple Color Emoji","Segoe UI Emoji",sans-serif;
 }
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -275,13 +275,13 @@ p strong{color:var(--encre);font-weight:600}
   <!-- ============ ÉCRAN 1 : ACCUEIL ============ -->
   <section class="screen on" id="s-intro">
     <div class="spacer"></div>
-    <div class="eyebrow" id="intro-date">23 août 2026</div>
-    <h1 class="mt" id="intro-title">Nathalie,<br>22 ans.</h1>
-    <p class="lead mt-l">Cette année, il n'y a pas de paquet à ouvrir.</p>
-    <p class="mt">Ton cadeau est déjà réservé, il est déjà payé, et il part sans toi si tu ne trouves pas où il va.</p>
-    <p class="mt"><strong>Quatre indices. C'est tout ce que je te donne.</strong></p>
+    <div class="eyebrow" id="intro-date">🎉 23 août 2026</div>
+    <h1 class="mt" id="intro-title">Joyeux<br>anniversaire,<br>Nathalie 🎂</h1>
+    <p class="lead mt-l" id="intro-age">22 ans aujourd'hui. Et cette année, il n'y a rien à déballer. 🎁</p>
+    <p class="mt">Ton cadeau est déjà réservé, déjà payé... et il part sans toi si tu ne trouves pas où il va. 🚂💨</p>
+    <p class="mt"><strong>Quatre indices, c'est tout ce que je te donne. Bonne chance. 🔍</strong></p>
     <div class="spacer"></div>
-    <button class="btn" id="go">Bon. Je regarde ça.</button>
+    <button class="btn" id="go">C'est parti 👀</button>
   </section>
 
   <!-- ============ ÉCRAN 2 : LES ÉNIGMES ============ -->
@@ -299,20 +299,21 @@ p strong{color:var(--encre);font-weight:600}
   <!-- ============ ÉCRAN 3 : LA TENSION ============ -->
   <section class="screen" id="s-almost">
     <div class="spacer"></div>
-    <div class="eyebrow center">Quatre sur quatre</div>
+    <div class="eyebrow center">🏆 Quatre sur quatre</div>
     <h2 class="mt center">Tu as tout trouvé.</h2>
     <div class="letters" id="letters-big"></div>
-    <p class="mt-l center">Une couleur, des avions, une fleur, un fleuve. Il ne reste plus qu'un mot à lire.</p>
-    <p class="mt center"><strong>Tu as déjà une idée, non ?</strong></p>
+    <p class="mt-l center">Du bleu de pastel, un aviateur, des satellites et une place immense. Il ne reste plus qu'un mot à lire.</p>
+    <p class="mt center"><strong>Tu as une idée ? 🤔</strong></p>
+    <p class="mt center" style="font-size:14.5px">Et si tu sèches complètement, gratte quand même. Tu verras bien. 😏</p>
     <div class="spacer"></div>
-    <button class="btn" id="to-scratch">Vérifier</button>
+    <button class="btn" id="to-scratch">Vérifier 👇</button>
   </section>
 
   <!-- ============ ÉCRAN 4 : LE GRATTAGE ============ -->
   <section class="screen" id="s-scratch">
     <div class="spacer"></div>
     <div class="eyebrow center">Destination</div>
-    <h2 class="mt center" style="margin-bottom:18px">Gratte avec ton doigt.</h2>
+    <h2 class="mt center" style="margin-bottom:18px">Gratte avec ton doigt 👇</h2>
     <div class="scratch-wrap">
       <div class="scratch-under">
         <div class="small">Tu descends à</div>
@@ -328,9 +329,9 @@ p strong{color:var(--encre);font-weight:600}
 
   <!-- ============ ÉCRAN 5 : LE REVEAL ============ -->
   <section class="screen" id="s-reveal">
-    <div class="eyebrow">Ton cadeau</div>
+    <div class="eyebrow">🎁 Ton cadeau</div>
     <h2 class="mt" id="reveal-title">Trois nuits à Toulouse.</h2>
-    <p class="mt">Les billets sont pris. Tu n'as rien à faire, à part être prête.</p>
+    <p class="mt">Les billets sont pris 🚂 Tu n'as rien à faire, à part être prête.</p>
     <div class="mt-l" id="full-ticket-slot"></div>
     <div class="countdown">
       <div class="j" id="cd-j">J-19</div>
@@ -389,52 +390,52 @@ const CONFIG = {
    ================================================================ */
 const ENIGMES = [
   {
-    titre: "Premier indice",
-    texte: "Cette ville a une couleur. Pas un drapeau, pas un maillot : une vraie couleur, celle de ses murs. Au coucher du soleil, elle vire carrément à l'orange.",
-    options: ["Rose", "Blanche", "Bleue", "Grise"],
+    titre: "Premier indice 🎨",
+    texte: "Au 16e siècle, cette ville est devenue immensément riche grâce à une plante. On en faisait des boules appelées cocagnes, vendues dans toute l'Europe pour teindre les tissus. Quelle couleur en sortait ?",
+    options: ["Le bleu", "Le rouge", "Le jaune", "Le vert"],
     bonne: 0,
-    indice: "On la surnomme comme ça, et c'est écrit sur toutes les cartes postales.",
-    apres: "Rose. On l'appelle la Ville Rose, et ce ne sont pas des murs peints : c'est la brique.",
+    indice: "La plante s'appelle le pastel des teinturiers. Regarde la couleur d'un vieux jean.",
+    apres: "Le bleu de pastel. La région était si prospère qu'on l'a appelée le pays de Cocagne, et cette ville en était la capitale.",
     cell: 0,
-    lettre: 0
+    lettre: 2
   },
   {
-    titre: "Deuxième indice",
-    texte: "Dans cette ville, on assemble des engins de 70 mètres de long qui pèsent 250 tonnes. Et pourtant, ils décollent avec 500 personnes à bord.",
-    options: ["Des bateaux", "Des avions", "Des grues", "Des tracteurs"],
+    titre: "Deuxième indice ✈️",
+    texte: "C'est d'ici que décollaient les pilotes de l'Aéropostale pour porter le courrier jusqu'en Amérique du Sud, souvent au péril de leur vie. L'un d'eux a écrit un livre avec un petit garçon, une rose et un renard.",
+    options: ["Jules Verne", "Saint-Exupéry", "Jack London", "Hemingway"],
     bonne: 1,
-    indice: "500 personnes à bord, et ça ne touche plus le sol pendant douze heures.",
-    apres: "Des avions. Airbus est ici, et la ville entière tourne autour.",
+    indice: "Le livre en question s'appelle Le Petit Prince.",
+    apres: "Saint-Exupéry. Il décollait de l'aérodrome de Montaudran, à deux pas du centre-ville.",
     cell: 1,
-    lettre: 1
+    lettre: 4
   },
   {
-    titre: "Troisième indice",
-    texte: "Elle a une fleur officielle. Minuscule, et elle sent tellement fort qu'on en a fait des bonbons, du parfum, et même de la liqueur.",
-    options: ["La lavande", "Le mimosa", "La violette", "Le coquelicot"],
+    titre: "Troisième indice 🛰️",
+    texte: "Aujourd'hui encore, on y assemble des engins qui partent sans jamais revenir. Une bonne partie des appareils européens qui tournent au-dessus de nos têtes sortent de ses ateliers.",
+    options: ["Des sous-marins", "Des éoliennes", "Des satellites", "Des locomotives"],
     bonne: 2,
-    indice: "Sa couleur porte le même nom qu'elle. Un violet foncé, presque bleu.",
-    apres: "La violette. Il y a même une confrérie sur place pour la protéger.",
+    indice: "Ils tournent autour de la Terre, et tu t'en sers chaque fois que tu ouvres ton GPS.",
+    apres: "Des satellites. Il y a même une vraie fusée Ariane 5 dressée dans le jardin de sa Cité de l'espace.",
     cell: 2,
-    lettre: 3
+    lettre: 5
   },
   {
-    titre: "Dernier indice",
-    texte: "Un fleuve la traverse en plein centre. Il naît en Espagne, il finit dans l'Atlantique, et l'été tout le monde dîne sur ses quais jusqu'à la nuit.",
-    options: ["Le Rhône", "La Loire", "La Seine", "La Garonne"],
+    titre: "Dernier indice 🏛️",
+    texte: "Sa mairie ne s'appelle pas la mairie. Elle porte le nom d'une des sept collines de Rome, et les notables qui y siégeaient portaient un titre qui n'existe nulle part ailleurs.",
+    options: ["Le Forum", "Le Panthéon", "Le Palatin", "Le Capitole"],
     bonne: 3,
-    indice: "Ce n'est ni Paris, ni Lyon, ni les châteaux. On est dans le Sud-Ouest.",
-    apres: "La Garonne. Et le Canal du Midi part d'ici pour rejoindre la Méditerranée.",
+    indice: "Ceux qui y gouvernaient s'appelaient les capitouls.",
+    apres: "Le Capitole. Sa place est immense, avec une croix occitane géante dessinée au sol.",
     cell: 3,
-    lettre: 6
+    lettre: 7
   }
 ];
 
 /* réactions quand elle se trompe : jamais méchant, toujours complice */
 const RATES = [
-  "Non. Mais j'aime beaucoup l'idée.",
-  "Toujours pas. Je t'enlève ce qui n'a aucune chance.",
-  "Il n'en reste qu'une. Tu ne peux plus te tromper."
+  "Raté 😅 Mais j'aime beaucoup l'idée.",
+  "Toujours pas 🙈 Je t'enlève ce qui n'a aucune chance.",
+  "Il n'en reste qu'une 😄 Tu ne peux plus te tromper."
 ];
 
 /* ================================================================
@@ -571,11 +572,11 @@ function repondre(i, btn){
     paintMini(e.cell);
 
     fb.className = "feedback hit on";
-    fb.innerHTML = "<b>Exact.</b> " + e.apres;
+    fb.innerHTML = "<b>Bravo 🎯</b> " + e.apres;
 
     $("next").textContent = (idx === ENIGMES.length - 1)
-      ? "Voir ce que ça donne"
-      : "Indice suivant";
+      ? "Voir ce que ça donne 🎁"
+      : "Indice suivant 👉";
     $("next").style.display = "block";
     /* le bouton tombe sous la ligne de flottaison sur la plupart des
        téléphones : on l'amène à elle plutôt que d'attendre qu'elle scrolle */
@@ -858,8 +859,9 @@ function confetti(){
    INJECTION DE LA CONFIG DANS LES TEXTES
    ================================================================ */
 (function hydrate(){
-  $("intro-date").textContent   = CONFIG.dateAnniv;
-  $("intro-title").innerHTML    = CONFIG.prenom + ",<br>" + CONFIG.age + " ans.";
+  $("intro-date").textContent   = "🎉 " + CONFIG.dateAnniv;
+  $("intro-title").innerHTML    = "Joyeux<br>anniversaire,<br>" + CONFIG.prenom + " 🎂";
+  $("intro-age").textContent    = CONFIG.age + " ans aujourd'hui. Et cette année, il n'y a rien à déballer. 🎁";
   $("dest-word").textContent    = CONFIG.destination.ville;
   $("dest-station").textContent = CONFIG.destination.gare;
 
