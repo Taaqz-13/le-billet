@@ -115,16 +115,30 @@ p strong{color:var(--encre);font-weight:600}
   40%{transform:translateX(9px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)}
 }
 
-/* ---------- polaroid ---------- */
+/* ---------- polaroids ---------- */
 .polaroid{
-  align-self:center;background:#FFFCF6;padding:11px 11px 46px;border-radius:2px;
+  background:#FFFCF6;padding:10px 10px 42px;border-radius:2px;
   box-shadow:0 1px 0 rgba(34,48,63,.07), 0 22px 40px -24px rgba(34,48,63,.6);
-  transform:rotate(-2.2deg);position:relative;
+  position:relative;
 }
 .polaroid img{
-  display:block;width:100%;height:min(40vh,360px);object-fit:cover;object-position:50% 32%;
+  display:block;width:100%;height:min(34vh,300px);object-fit:cover;object-position:50% 30%;
   background:var(--papier2);
 }
+/* deux photos posees en eventail, comme sur une table */
+.polas{position:relative;align-self:center;width:min(60vw,238px);margin-top:2px}
+.polas .polaroid{width:100%}
+.polas .derriere{position:absolute;inset:0;transform:rotate(7deg) translate(15px,-7px);z-index:0}
+.polas .devant{position:relative;transform:rotate(-2.6deg);z-index:1}
+
+/* le petit rappel sur l'ecran de tension */
+.pola-petit{align-self:center;width:min(42vw,158px);transform:rotate(3deg);margin-top:4px}
+.pola-petit img{height:min(21vh,190px)}
+.pola-petit{padding:7px 7px 12px}
+
+/* eux deux, juste avant le mot */
+.pola-couple{align-self:center;width:min(74vw,306px);transform:rotate(1.6deg);margin-top:22px}
+.pola-couple img{height:min(37vh,320px);object-position:50% 42%}
 .polaroid .legende{
   position:absolute;left:0;right:0;bottom:13px;text-align:center;
   font-family:var(--serif);font-size:16px;color:var(--encre2);font-style:italic;
@@ -279,6 +293,14 @@ p strong{color:var(--encre);font-weight:600}
 .countdown{margin-top:16px;padding:15px;border-radius:3px;text-align:center;background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 1.5px var(--papier3)}
 .countdown .j{font-family:var(--serif);font-size:36px;line-height:1;color:var(--brique)}
 .countdown .d{font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--encre2);margin-top:7px}
+/* le retournement : elle croyait que ce week-end etait pour son anniversaire a lui */
+.twist{
+  margin-top:18px;padding:18px;border-radius:3px;
+  background:rgba(193,85,59,.08);box-shadow:inset 0 0 0 1.5px rgba(193,85,59,.28);
+}
+.twist .q{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--brique);margin-bottom:10px}
+.twist .t{font-family:var(--serif);font-size:17.5px;line-height:1.55;color:var(--encre)}
+
 .note{margin-top:16px;padding:19px 18px;border-radius:3px;background:rgba(107,78,155,.07);box-shadow:inset 0 0 0 1.5px rgba(107,78,155,.2)}
 .note .sig{font-family:var(--serif);font-size:17px;line-height:1.55;color:var(--encre)}
 .note .from{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--violette);margin-bottom:9px}
@@ -309,13 +331,17 @@ p strong{color:var(--encre);font-weight:600}
   <!-- ============ 1. ACCUEIL ============ -->
   <section class="screen" id="s-intro">
     <div class="spacer"></div>
-    <div class="polaroid">
-      <img id="photo-nathalie" alt="">
-      <div class="legende" id="photo-legende">22 ans 🎂</div>
+    <div class="polas">
+      <div class="polaroid derriere"><img id="photo-nathalie2" alt=""></div>
+      <div class="polaroid devant">
+        <img id="photo-nathalie" alt="">
+        <div class="legende" id="photo-legende">22 ans 🎂</div>
+      </div>
     </div>
     <div class="eyebrow mt-l center" id="intro-date">🎉 23 août 2026</div>
     <h1 class="mt center" id="intro-title">Joyeux anniversaire,<br>Nat</h1>
     <p class="mt center" id="intro-p1">Cette année, il n'y a rien à déballer. 🎁</p>
+    <p class="mt center">Tu m'as demandé cent fois ce que je préparais. J'ai rien lâché. 🤐 ^.^</p>
     <p class="mt center"><strong id="intro-p2">Ton cadeau est déjà réservé, déjà payé... et il part sans toi si tu ne trouves pas où il va. 🚂</strong></p>
     <div class="spacer"></div>
     <button class="btn" id="go">C'est parti 👀</button>
@@ -343,6 +369,7 @@ p strong{color:var(--encre);font-weight:600}
     <div class="choices" id="choices"></div>
     <div class="feedback" id="feedback"></div>
     <button class="btn" id="next" style="display:none;margin-top:16px">Suivant</button>
+    <button class="btn ghost" id="passer" style="margin-top:12px">Aucune idée, je passe 🤷</button>
     <div class="spacer"></div>
   </section>
 
@@ -362,10 +389,11 @@ p strong{color:var(--encre);font-weight:600}
   <!-- ============ 5. TENSION ============ -->
   <section class="screen" id="s-almost">
     <div class="spacer"></div>
-    <div class="eyebrow center">🏆 Tout est débloqué</div>
+    <div class="polaroid pola-petit"><img id="photo-nathalie3" alt=""></div>
+    <div class="eyebrow mt center">🏆 Tout est débloqué</div>
     <h2 class="mt center">Il ne manque qu'un mot.</h2>
     <div class="letters" id="letters-big"></div>
-    <p class="mt-l center">Du bleu de pastel, un aviateur, et un billet complet. Il ne reste que la destination.</p>
+    <p class="mt-l center">Du bleu de pastel, un plat qui mijote, et un billet complet. Il ne reste que la destination.</p>
     <p class="mt center"><strong>Tu as une idée ? 🤔</strong></p>
     <p class="mt center" style="font-size:14.5px">Et si tu sèches complètement, gratte quand même. Tu verras bien. 😏</p>
     <div class="spacer"></div>
@@ -405,6 +433,14 @@ p strong{color:var(--encre);font-weight:600}
     <div class="countdown">
       <div class="j" id="cd-j">J-19</div>
       <div class="d" id="cd-d">Chargement</div>
+    </div>
+    <div class="twist">
+      <div class="q">😏 Petite précision</div>
+      <div class="t" id="twist-text">Tu étais persuadée que ce week-end, c'était pour fêter mon anniversaire à moi. J'ai laissé dire. En vrai, j'ai tout inventé : c'était pour toi depuis le début. ^.^</div>
+    </div>
+    <div class="polaroid pola-couple">
+      <img id="photo-couple" alt="">
+      <div class="legende" id="couple-legende">bientôt ailleurs</div>
     </div>
     <div class="note">
       <div class="from" id="note-from">Un mot pour toi</div>
@@ -461,19 +497,33 @@ const TOURS_PBKDF2 = 200000;   // doit correspondre a chiffre-photos.py
 const ENIGMES = [
   {
     titre: "Premier indice 🎨",
-    texte: "Au 16e siècle, cette ville est devenue immensément riche grâce à une plante. On en faisait des boules appelées cocagnes, vendues dans toute l'Europe pour teindre les tissus. Quelle couleur en sortait ?",
+    texte: "Au 16e siècle, la ville où on va est devenue riche à millions grâce à une plante. On en faisait des boules, appelées cocagnes, qu'on revendait dans toute l'Europe pour teindre les tissus. Bref : ça donnait quelle couleur ?",
     options: ["Le bleu", "Le rouge", "Le jaune", "Le vert"],
     bonne: 0,
-    indice: "La plante s'appelle le pastel des teinturiers. Regarde la couleur d'un vieux jean.",
-    apres: "Le bleu de pastel. La région était si riche qu'on l'appelait le pays de Cocagne, et cette ville en était la capitale."
+    /* une pique differente selon la mauvaise reponse : c'est ce qui rend le
+       quiz vivant plutot que scolaire */
+    reactions: [
+      "",
+      "Le rouge ? Ça aurait donné des pulls très voyants.",
+      "Le jaune, non. Mais j'aime l'optimisme. ^.^",
+      "Le vert ? Tu confonds avec le pesto."
+    ],
+    indice: "La plante s'appelle le pastel des teinturiers. Pense à la couleur d'un vieux jean.",
+    apres: "Le bleu de pastel. La région en est devenue si riche qu'on l'a surnommée le pays de Cocagne, et cette ville en était la capitale."
   },
   {
-    titre: "Deuxième indice ✈️",
-    texte: "C'est d'ici que décollaient les pilotes de l'Aéropostale pour porter le courrier jusqu'en Amérique du Sud, souvent au péril de leur vie. L'un d'eux a écrit un livre avec un petit garçon, une rose et un renard.",
-    options: ["Jules Verne", "Saint-Exupéry", "Jack London", "Hemingway"],
+    titre: "Deuxième indice 🍲",
+    texte: "Un plat qui mijote des heures : haricots blancs, saucisse, confit de canard. Trois villes du Sud-Ouest se battent depuis toujours pour dire qu'il est né chez elles, et la nôtre est dans le lot.",
+    options: ["La blanquette", "Le cassoulet", "La choucroute", "Les pâtes au beurre"],
     bonne: 1,
-    indice: "Le livre en question s'appelle Le Petit Prince.",
-    apres: "Saint-Exupéry. Il décollait de l'aérodrome de Montaudran, à deux pas du centre-ville."
+    reactions: [
+      "La blanquette, c'est bon, mais c'est pas du Sud-Ouest.",
+      "",
+      "La choucroute ? On est à 900 km trop à l'est.",
+      "Les pâtes au beurre. Bien tenté. ^.^"
+    ],
+    indice: "Haricots blancs et confit, servis dans un plat en terre cuite. On en mange l'hiver et on ne bouge plus pendant deux heures.",
+    apres: "Le cassoulet. La saucisse qui va dedans porte carrément le nom de la ville, et le débat n'est toujours pas tranché."
   }
 ];
 
@@ -612,6 +662,7 @@ function showEnigme(){
   $("q-text").textContent  = e.texte;
   $("feedback").className  = "feedback";
   $("next").style.display  = "none";
+  $("passer").style.display = "block";
   $("choices").innerHTML = e.options.map((o,i)=>
     '<button class="choice" data-i="' + i + '"><span class="mark">' + "ABCD"[i] + '</span><span>' + o + '</span></button>'
   ).join("");
@@ -628,6 +679,7 @@ function repondre(i, btn){
     etapeReussie();
     fb.className = "feedback hit on";
     fb.innerHTML = "<b>Bravo 🎯</b> " + e.apres;
+    $("passer").style.display = "none";
     $("next").textContent = (etape === PARCOURS.length - 1) ? "Voir ce que ça donne 🎁" : "Suite 👉";
     $("next").style.display = "block";
     setTimeout(()=>$("next").scrollIntoView({ behavior:"smooth", block:"end" }), 150);
@@ -638,10 +690,29 @@ function repondre(i, btn){
   btn.querySelector(".mark").textContent = "×";
   buzz(8);
   const reste = [...$("choices").children].filter(b => !b.classList.contains("off")).length;
+  /* la pique propre a l'option choisie, sinon la reaction generique */
+  const pique = (e.reactions && e.reactions[i]) ? e.reactions[i] : RATES[Math.min(essais, RATES.length) - 1];
   fb.className = "feedback miss on";
-  fb.innerHTML = "<b>" + RATES[Math.min(essais, RATES.length) - 1] + "</b>" + (reste > 1 ? " " + e.indice : "");
+  fb.innerHTML = "<b>" + pique + "</b>" + (reste > 1 ? " " + e.indice : " Il n'en reste qu'une, tu ne peux plus te tromper 😄");
   setTimeout(()=>fb.scrollIntoView({ behavior:"smooth", block:"end" }), 150);
 }
+
+/* elle peut toujours passer : la case du billet se debloque quand meme,
+   sauter une devinette ne doit rien lui coûter */
+$("passer").addEventListener("click", ()=>{
+  const e = ENIGMES[idxEnigme], fb = $("feedback");
+  [...$("choices").children].forEach((b,i)=>{
+    b.setAttribute("disabled","");
+    if (i === e.bonne){ b.classList.add("good"); b.querySelector(".mark").textContent = "✓"; }
+  });
+  etapeReussie();
+  fb.className = "feedback hit on";
+  fb.innerHTML = "<b>On s'en fiche 😌</b> " + e.apres + " Je te débloque la case quand même.";
+  $("passer").style.display = "none";
+  $("next").textContent = (etape === PARCOURS.length - 1) ? "Voir ce que ça donne 🎁" : "Suite 👉";
+  $("next").style.display = "block";
+  setTimeout(()=>$("next").scrollIntoView({ behavior:"smooth", block:"end" }), 150);
+});
 
 $("next").addEventListener("click", etapeSuivante);
 
@@ -1117,6 +1188,9 @@ function construitPave(){
   });
 }
 
+/* chaque photo a son propre sel, donc sa propre cle : la derivation PBKDF2
+   coute environ 300 ms sur un telephone. On ne la fait donc qu'une fois par
+   photo, et surtout on ne bloque l'ecran que sur la premiere. */
 async function dechiffre(nom, code){
   const b64 = (await (await fetch(nom + ".enc", { cache:"no-store" })).text()).trim();
   const brut = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
@@ -1129,6 +1203,22 @@ async function dechiffre(nom, code){
   return URL.createObjectURL(new Blob([clair], { type:"image/jpeg" }));
 }
 
+/* les photos qui n'apparaissent pas tout de suite : on les charge en fond,
+   sans jamais faire attendre l'ecran d'accueil */
+function chargeLeReste(code){
+  const suite = [
+    ["nathalie2", "photo-nathalie2"],
+    ["nathalie3", "photo-nathalie3"],
+    ["couple",    "photo-couple"],
+    ["toulouse",  "photo-toulouse"]
+  ];
+  suite.forEach(([nom, id])=>{
+    dechiffre(nom, code)
+      .then(url => { PHOTOS[nom] = url; const el = $(id); if (el) el.src = url; })
+      .catch(()=>{ const el = $(id); if (el) el.closest(".polaroid, .photo-large")?.remove(); });
+  });
+}
+
 let ratesCode = 0;
 
 async function valideCode(){
@@ -1139,9 +1229,7 @@ async function valideCode(){
     /* si le code est faux, AES-GCM leve une exception : pas de comparaison a tricher */
     PHOTOS.nathalie = await dechiffre("nathalie", code);
     $("photo-nathalie").src = PHOTOS.nathalie;
-    dechiffre("toulouse", code)
-      .then(u => { PHOTOS.toulouse = u; $("photo-toulouse").src = u; })
-      .catch(()=>{});
+    chargeLeReste(code);
     buzz([14,50,14]);
     show("s-intro");
   } catch (err) {
