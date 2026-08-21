@@ -314,7 +314,7 @@ p strong{color:var(--encre);font-weight:600}
       <div class="legende" id="photo-legende">22 ans 🎂</div>
     </div>
     <div class="eyebrow mt-l center" id="intro-date">🎉 23 août 2026</div>
-    <h1 class="mt center" id="intro-title">Joyeux anniversaire,<br>Nathalie</h1>
+    <h1 class="mt center" id="intro-title">Joyeux anniversaire,<br>Nat</h1>
     <p class="mt center" id="intro-p1">Cette année, il n'y a rien à déballer. 🎁</p>
     <p class="mt center"><strong id="intro-p2">Ton cadeau est déjà réservé, déjà payé... et il part sans toi si tu ne trouves pas où il va. 🚂</strong></p>
     <div class="spacer"></div>
@@ -420,7 +420,8 @@ p strong{color:var(--encre);font-weight:600}
    CONFIG : tout ce qui se personnalise est ICI
    ================================================================ */
 const CONFIG = {
-  prenom: "Nathalie",
+  prenom: "Nat",              // comme tu l'appelles : sert dans les textes
+  prenomOfficiel: "Nathalie", // sert sur le billet, un nominatif porte le nom complet
   age: 22,
   dateAnniv: "23 août 2026",
 
@@ -534,7 +535,7 @@ function buildTicket(full){
          '<div class="city" style="text-align:right"><div class="lbl">Arrivée</div>' + dest + '</div></div>' +
          '<div class="ticket-grid">' + cells + '</div>' +
          (full ? '<div class="ticket-foot"><div class="barcode">' + barcode() + '</div><div class="ref">' +
-                 CONFIG.prenom.toUpperCase() + ' / ' + CONFIG.age + ' ANS</div></div>' : '');
+                 CONFIG.prenomOfficiel.toUpperCase() + ' / ' + CONFIG.age + ' ANS</div></div>' : '');
 }
 
 /* repeint les 3 mini-billets, et fait clignoter la case qu'on vient d'ouvrir */
