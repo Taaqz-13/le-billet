@@ -1090,8 +1090,10 @@ let saisie = "";
 const PHOTOS = {};
 
 function paintCases(){
+  /* les chiffres restent visibles : ce n'est pas un mot de passe, et au doigt
+     elle doit pouvoir relire ce qu'elle vient de taper avant de valider */
   [...$("cases").children].forEach((c,i)=>{
-    c.textContent = saisie[i] ? "•" : "";
+    c.textContent = saisie[i] || "";
     c.classList.toggle("plein", !!saisie[i]);
   });
 }
