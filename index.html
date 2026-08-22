@@ -425,6 +425,18 @@ p strong{color:var(--encre);font-weight:600}
     <button class="btn" id="go">C'est parti 👀</button>
   </section>
 
+  <!-- ============ 1 bis. LES TROIS QUESTIONS ============ -->
+  <section class="screen" id="s-devine">
+    <div class="dots" id="dots-devine"></div>
+    <div class="eyebrow mt center" id="dev-num">Question 1 sur 3</div>
+    <h2 class="mt center" id="dev-question">Question</h2>
+    <p class="mt center" id="dev-sous">Sous-titre</p>
+    <div class="choices" id="dev-choix"></div>
+    <div class="feedback" id="dev-feedback"></div>
+    <button class="btn" id="dev-next" style="display:none;margin-top:16px">Suite 👉</button>
+    <div class="spacer"></div>
+  </section>
+
   <!-- ============ 2. MINI-JEU : SAUTE ============ -->
   <section class="screen" id="s-saut">
     <div class="mot-titre">Tes lettres · le mot en fait 8</div>
@@ -542,6 +554,18 @@ p strong{color:var(--encre);font-weight:600}
     <div class="score"><span id="val-score">0 / 24 attrapées</span><span id="val-etat">Touche pour démarrer</span></div>
     <div class="consigne">Rien ne se perd : ce qui tombe à côté, tu le rattraperas au tour suivant. 😌</div>
     <button class="btn mt" id="val-next" style="display:none">Continuer 👉</button>
+    <div class="spacer"></div>
+  </section>
+
+  <!-- ============ 4 bis. LA CARTE ============ -->
+  <section class="screen" id="s-carte">
+    <div class="eyebrow center">Dernière étape</div>
+    <h2 class="mt center">Montre-moi où.</h2>
+    <p class="mt center">Touche la carte là où tu penses qu'on va. Je te dirai si tu chauffes.</p>
+    <canvas class="jeu-canvas mt" id="cv-carte" height="360"></canvas>
+    <div class="feedback" id="carte-fb"></div>
+    <div class="score"><span id="carte-essais">Aucun essai</span><span id="carte-etat">À toi</span></div>
+    <button class="btn mt" id="carte-next" style="display:none">Continuer 👉</button>
     <div class="spacer"></div>
   </section>
 
@@ -891,8 +915,8 @@ function etapeReussie(){
 function etapeSuivante(){
   etape++;
   if (etape >= PARCOURS.length){
-    paintLettresPartout();
-    show("s-almost");
+    show("s-carte");
+    initCarte();
     return;
   }
   lanceEtape();
@@ -1189,6 +1213,241 @@ function initSaut(){
   boucle();
 }
 $("saut-next").addEventListener("click", ()=>{ cancelAnimationFrame(sautRAF); etapeSuivante(); });
+
+/* ================================================================
+   LES TROIS QUESTIONS
+   Avant tout jeu : elle devine la NATURE du cadeau, jamais le lieu.
+   Savoir que c'est un week-end en train ne dit rien de la destination,
+   mais lui donne de quoi speculer pendant tout le reste.
+   ================================================================ */
+const REVELATIONS = [
+  {
+    question: "À ton avis, c'est quoi ?",
+    sous: "Premier réflexe, ne réfléchis pas trop.",
+    options: ["Un objet", "Un truc à manger", "Un voyage", "Une soirée"],
+    bonne: 2,
+    reactions: [
+      "Non, rien à déballer cette année.",
+      "Ça viendra, mais non.",
+      "",
+      "Une soirée ? On voit plus grand que ça."
+    ],
+    apres: "Un voyage. Voilà, tu sais déjà ça."
+  },
+  {
+    question: "Et ça dure combien de temps ?",
+    sous: "Sois raisonnable, je ne t'enlève pas un mois.",
+    options: ["Une journée", "Un week-end", "Une semaine", "Un mois"],
+    bonne: 1,
+    reactions: [
+      "Plus qu'une journée, quand même.",
+      "",
+      "J'aimerais bien, mais non.",
+      "Un mois ? Tu me prends pour qui ^.^"
+    ],
+    apres: "Un week-end. Trois nuits, pour être exact."
+  },
+  {
+    question: "Et on y va comment ?",
+    sous: "Il n'y a pas de mauvaise réponse honteuse.",
+    options: ["En voiture", "En avion", "En train", "À vélo"],
+    bonne: 2,
+    reactions: [
+      "Non, je ne conduis pas pendant des heures.",
+      "Trop court pour l'avion.",
+      "",
+      "À vélo. Bien sûr."
+    ],
+    apres: "En train. Les billets sont déjà réservés."
+  }
+];
+
+let idxRev = 0, essaisRev = 0;
+
+function paintDotsDevine(){
+  $("dots-devine").innerHTML = REVELATIONS.map((_,i)=>
+    '<i class="' + (i < idxRev ? "done" : i === idxRev ? "on" : "") + '"></i>').join("");
+}
+
+function showRevelation(){
+  const r = REVELATIONS[idxRev];
+  essaisRev = 0;
+  window.scrollTo({ top:0, behavior:"smooth" });
+  paintDotsDevine();
+  $("dev-num").textContent = "Question " + (idxRev+1) + " sur " + REVELATIONS.length;
+  $("dev-question").textContent = r.question;
+  $("dev-sous").textContent = r.sous;
+  $("dev-feedback").className = "feedback";
+  $("dev-next").style.display = "none";
+  $("dev-choix").innerHTML = r.options.map((o,i)=>
+    '<button class="choice" data-i="' + i + '"><span class="mark">' + "ABCD"[i] + '</span><span>' + o + '</span></button>'
+  ).join("");
+  [...$("dev-choix").children].forEach(b =>
+    b.addEventListener("click", ()=> repondreRevelation(parseInt(b.dataset.i,10), b)));
+}
+
+function repondreRevelation(i, btn){
+  const r = REVELATIONS[idxRev], fb = $("dev-feedback");
+  if (i === r.bonne){
+    btn.classList.add("good");
+    btn.querySelector(".mark").textContent = "✓";
+    [...$("dev-choix").children].forEach(b => b.setAttribute("disabled",""));
+    buzz(16); SON.bravo();
+    fb.className = "feedback hit on";
+    fb.innerHTML = "<b>Exactement 🎯</b> " + r.apres;
+    $("dev-next").textContent = idxRev === REVELATIONS.length - 1 ? "Alors, on commence 👉" : "Question suivante 👉";
+    $("dev-next").style.display = "block";
+    setTimeout(()=>$("dev-next").scrollIntoView({ behavior:"smooth", block:"end" }), 150);
+    return;
+  }
+  essaisRev++;
+  btn.classList.add("bad", "off");
+  btn.querySelector(".mark").textContent = "×";
+  buzz(8); SON.refus();
+  const reste = [...$("dev-choix").children].filter(b => !b.classList.contains("off")).length;
+  fb.className = "feedback miss on";
+  fb.innerHTML = "<b>" + (r.reactions[i] || "Non.") + "</b>" +
+    (reste <= 1 ? " Il n'en reste qu'une." : "");
+  setTimeout(()=>fb.scrollIntoView({ behavior:"smooth", block:"end" }), 150);
+}
+
+$("dev-next").addEventListener("click", ()=>{
+  idxRev++;
+  if (idxRev < REVELATIONS.length) showRevelation();
+  else { etape = 0; lanceEtape(); }
+});
+
+/* ================================================================
+   LA CARTE
+   Elle pose un marqueur, je reponds en distance reelle. Je confirme
+   la region a la fin, jamais la ville : sinon le grattage qui suit
+   ne revelerait plus rien.
+   ================================================================ */
+let carteRAF = null;
+function initCarte(){
+  cancelAnimationFrame(carteRAF);
+  const cv = $("cv-carte");
+  const { ctx, W, H } = prepCanvas(cv, 360);
+
+  /* contour simplifie de la France metropolitaine, en degres */
+  const CONTOUR = [
+    [2.4,51.0],[1.6,50.1],[0.2,49.7],[-1.0,49.4],[-1.9,49.7],[-3.5,48.9],[-4.8,48.4],
+    [-4.3,47.8],[-2.9,47.6],[-2.2,47.3],[-1.2,46.3],[-1.1,45.6],[-1.2,44.7],[-1.4,43.7],
+    [-1.8,43.4],[-0.7,42.9],[0.7,42.7],[1.8,42.5],[3.1,42.5],[3.1,43.1],[4.1,43.5],
+    [5.0,43.4],[5.6,43.2],[6.7,43.2],[7.5,43.7],[7.0,44.2],[6.9,45.1],[6.1,45.9],
+    [6.0,46.4],[6.8,46.9],[7.5,47.6],[7.6,48.6],[8.2,49.0],[6.4,49.5],[5.8,49.5],
+    [4.9,49.8],[4.2,50.3],[3.2,50.5],[2.5,50.8]
+  ];
+  const LON = [-5.2, 8.6], LAT = [42.2, 51.4];
+  const marge = 14;
+  const proj = (lon, lat) => ({
+    x: marge + (lon - LON[0])/(LON[1]-LON[0]) * (W - marge*2),
+    y: marge + (LAT[1] - lat)/(LAT[1]-LAT[0]) * (H - marge*2)
+  });
+  const inverse = (x, y) => ({
+    lon: LON[0] + (x - marge)/(W - marge*2) * (LON[1]-LON[0]),
+    lat: LAT[1] - (y - marge)/(H - marge*2) * (LAT[1]-LAT[0])
+  });
+
+  const CIBLE = { lon: 1.44, lat: 43.60 };          // Toulouse
+  const km = (a, b) => {
+    const dLat = (a.lat - b.lat) * 111;
+    const dLon = (a.lon - b.lon) * 111 * Math.cos((a.lat + b.lat)/2 * Math.PI/180);
+    return Math.round(Math.hypot(dLat, dLon));
+  };
+
+  const j = { essais: [], fini: false, regionMontree: false };
+  const MAX = 6;
+
+  function commentaire(d){
+    if (d < 90)  return ["Là 🔥 Tu y es presque.", "hit"];
+    if (d < 200) return ["Ça brûle. Tu es à " + d + " km.", "hit"];
+    if (d < 400) return ["Tu chauffes : " + d + " km.", "miss"];
+    if (d < 700) return ["Tiède. " + d + " km.", "miss"];
+    return ["Froid, très froid. " + d + " km.", "miss"];
+  }
+
+  cv.onpointerdown = e => {
+    e.preventDefault();
+    if (j.fini) return;
+    const r = cv.getBoundingClientRect();
+    const p = inverse(e.clientX - r.left, e.clientY - r.top);
+    const d = km(p, CIBLE);
+    j.essais.push({ ...p, d });
+    const [txt, cls] = commentaire(d);
+    $("carte-fb").className = "feedback on " + cls;
+    $("carte-fb").innerHTML = "<b>" + txt + "</b>";
+    $("carte-essais").textContent = j.essais.length + (j.essais.length > 1 ? " essais" : " essai");
+    buzz(8);
+    d < 200 ? SON.attrape() : SON.refus();
+
+    /* on s'arrete des qu'elle est proche, ou apres six essais : la region
+       est confirmee, mais le nom de la ville reste pour le grattage */
+    if (d < 150 || j.essais.length >= MAX){
+      j.fini = true;
+      j.regionMontree = true;
+      const meilleure = Math.min(...j.essais.map(e2 => e2.d));
+      $("carte-etat").textContent = "Sud-Ouest 🎯";
+      $("carte-fb").className = "feedback on hit";
+      $("carte-fb").innerHTML = "<b>C'est par là.</b> Le Sud-Ouest, à " + meilleure +
+        " km de ton meilleur essai. Mais le nom de la ville, tu ne l'auras pas comme ça.";
+      SON.arrivee();
+      $("carte-next").style.display = "block";
+      setTimeout(()=>$("carte-next").scrollIntoView({ behavior:"smooth", block:"end" }), 200);
+    }
+  };
+
+  function boucle(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = "#FBF6EC"; ctx.fillRect(0,0,W,H);
+
+    /* la region, une fois trouvee */
+    if (j.regionMontree){
+      const c = proj(0.9, 44.2);
+      const g = ctx.createRadialGradient(c.x, c.y, 4, c.x, c.y, 78);
+      g.addColorStop(0, "rgba(193,85,59,.45)");
+      g.addColorStop(1, "rgba(193,85,59,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(c.x, c.y, 78, 0, Math.PI*2); ctx.fill();
+    }
+
+    /* le pays */
+    ctx.beginPath();
+    CONTOUR.forEach((pt, i)=>{
+      const p = proj(pt[0], pt[1]);
+      i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y);
+    });
+    ctx.closePath();
+    ctx.fillStyle = "rgba(143,169,196,.22)";
+    ctx.fill();
+    ctx.strokeStyle = "#8FA9C4"; ctx.lineWidth = 2.5; ctx.lineJoin = "round";
+    ctx.stroke();
+
+    /* ses essais, du plus froid au plus chaud */
+    j.essais.forEach((e2, i)=>{
+      const p = proj(e2.lon, e2.lat);
+      const chaud = e2.d < 250;
+      ctx.fillStyle = chaud ? "rgba(193,85,59,.9)" : "rgba(92,107,122,.55)";
+      ctx.beginPath(); ctx.arc(p.x, p.y, chaud ? 8 : 6, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = "#FFFCF6";
+      ctx.font = "600 10px ui-monospace, Menlo, monospace";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(String(i+1), p.x, p.y);
+    });
+
+    carteRAF = requestAnimationFrame(boucle);
+  }
+  $("carte-next").style.display = "none";
+  $("carte-fb").className = "feedback";
+  $("carte-essais").textContent = "Aucun essai";
+  $("carte-etat").textContent = "À toi";
+  boucle();
+}
+$("carte-next").addEventListener("click", ()=>{
+  cancelAnimationFrame(carteRAF);
+  paintLettresPartout();
+  show("s-almost");
+});
 
 /* ================================================================
    MINI-JEU 5 : LE PUZZLE
@@ -2211,7 +2470,7 @@ async function valideCode(){
 /* ================================================================
    DEMARRAGE
    ================================================================ */
-$("go").addEventListener("click", ()=>{ etape = 0; lanceEtape(); });
+$("go").addEventListener("click", ()=>{ idxRev = 0; show("s-devine"); showRevelation(); });
 
 (function hydrate(){
   $("intro-date").textContent   = "🎉 " + CONFIG.dateAnniv;
