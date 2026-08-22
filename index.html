@@ -273,12 +273,12 @@ p strong{color:var(--encre);font-weight:600}
 
 /* le puzzle : neuf morceaux d'une photo, echangeables deux a deux */
 .puzzle{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:14px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:14px;
   aspect-ratio:1/1.05;border-radius:6px;overflow:hidden;
   background:var(--papier3);box-shadow:0 14px 34px -22px rgba(34,48,63,.6);
 }
 .puzzle div{
-  background-size:300% 300%;background-color:var(--papier2);
+  background-size:400% 400%;background-color:var(--papier2);
   position:relative;transition:transform .12s ease, box-shadow .12s ease;
 }
 .puzzle div.choisi{transform:scale(.93);box-shadow:inset 0 0 0 4px var(--brique);z-index:2}
@@ -430,7 +430,7 @@ p strong{color:var(--encre);font-weight:600}
     <div class="mot-titre">Tes lettres · le mot en fait 8</div>
     <div class="letters top" id="letters-saut"></div>
     <h2 class="mt">Saute, ma beauté 💫</h2>
-    <p class="mt" id="saut-txt">Tape pour sauter par-dessus les blocs. Mais quand ça vole, reste en bas : sauter, c'est se le prendre en pleine face.</p>
+    <p class="mt" id="saut-txt">Tape pour sauter par-dessus les blocs. Mais quand ça vole, reste en bas. Et ça accélère jusqu'à la fin.</p>
     <canvas class="jeu-canvas mt" id="cv-saut" height="190"></canvas>
     <div class="jauge"><i id="saut-jauge"></i></div>
     <div class="score"><span id="saut-dist">0 %</span><span id="saut-etat">Tape pour démarrer</span></div>
@@ -480,10 +480,10 @@ p strong{color:var(--encre);font-weight:600}
     <div class="mot-titre">Tes lettres · le mot en fait 8</div>
     <div class="letters top" id="letters-attrape"></div>
     <h2 class="mt">Attrape-moi si tu peux 🏃</h2>
-    <p class="mt">Je me téléporte partout, et je ne reste pas longtemps. Touche ma tête dix fois.</p>
+    <p class="mt">Je me téléporte partout, et je ne reste pas longtemps. Touche ma tête quatorze fois.</p>
     <canvas class="jeu-canvas mt" id="cv-attrape" height="300"></canvas>
     <div class="jauge"><i id="att-jauge"></i></div>
-    <div class="score"><span id="att-score">0 / 10</span><span id="att-etat">Touche l'écran pour lancer</span></div>
+    <div class="score"><span id="att-score">0 / 14</span><span id="att-etat">Touche l'écran pour lancer</span></div>
     <div class="consigne" id="att-consigne">Rater ne coûte rien, à part m'entendre me vanter. 😌</div>
     <button class="btn mt" id="att-next" style="display:none">Continuer 👉</button>
     <div class="spacer"></div>
@@ -497,7 +497,7 @@ p strong{color:var(--encre);font-weight:600}
     <p class="mt">Touche deux morceaux pour les échanger. Il y a une photo là-dessous.</p>
     <div class="puzzle" id="puzzle"></div>
     <div class="jauge"><i id="puz-jauge"></i></div>
-    <div class="score"><span id="puz-score">0 / 9 en place</span><span id="puz-etat">À toi</span></div>
+    <div class="score"><span id="puz-score">0 / 16 en place</span><span id="puz-etat">À toi</span></div>
     <div class="consigne" id="puz-consigne">Tu ne peux rien casser : échange autant de fois que tu veux. 😌</div>
     <button class="btn mt" id="puz-next" style="display:none">Continuer 👉</button>
     <div class="spacer"></div>
@@ -539,7 +539,7 @@ p strong{color:var(--encre);font-weight:600}
     <p class="mt">Glisse ton doigt pour déplacer le chariot et rattrape ce qui tombe.</p>
     <canvas class="jeu-canvas mt" id="cv-valises" height="290"></canvas>
     <div class="jauge"><i id="val-jauge"></i></div>
-    <div class="score"><span id="val-score">0 / 12 attrapées</span><span id="val-etat">Touche pour démarrer</span></div>
+    <div class="score"><span id="val-score">0 / 24 attrapées</span><span id="val-etat">Touche pour démarrer</span></div>
     <div class="consigne">Rien ne se perd : ce qui tombe à côté, tu le rattraperas au tour suivant. 😌</div>
     <button class="btn mt" id="val-next" style="display:none">Continuer 👉</button>
     <div class="spacer"></div>
@@ -1007,7 +1007,7 @@ function initSaut(){
   const sol = H - 30;
 
   const j = {
-    y: sol, vy: 0, dist: 0, vit: 3.3, obstacles: [], decor: [],
+    y: sol, vy: 0, dist: 0, vit: 3.2, obstacles: [], decor: [],
     defile: 0, touches: 0, fini: false, demarre: false, flash: 0, rot: 0
   };
   for (let i = 0; i < 6; i++) j.decor.push({ x: Math.random()*W, h: 7 + Math.random()*15 });
@@ -1018,14 +1018,22 @@ function initSaut(){
      rapproches, et l'ecart s'agrandit si elle se prend des murs. */
   const poseObstacle = () => {
     const dernier = j.obstacles[j.obstacles.length - 1];
-    const ecart = 150 + Math.random()*75 + j.touches*32;
+    /* L'ecart suit la vitesse, sinon a pleine allure le temps de reaction
+       tomberait sous le seuil humain. Le facteur, lui, se resserre : on
+       passe d'environ 0,55 s a 0,42 s entre deux obstacles. Et il s'ouvre
+       de nouveau si elle se prend des murs, pour ne jamais la coincer. */
+    const serrage = .86 - (j.dist/100)*.26;
+    const ecart = (132 + Math.random()*62) * (j.vit/3.2) * serrage + j.touches*34;
     if (dernier && dernier.x > W - ecart) return;
-    const enLair = j.dist > 12 && Math.random() < .42;   // les 12 premiers % sont au sol, le temps de comprendre
+
+    const enLair = j.dist > 10 && Math.random() < .46;
     if (enLair){
-      const moi = Math.random() < .32;                   // parfois c'est ma tete qui arrive
+      const moi = Math.random() < .34;                  // parfois c'est ma tete qui arrive
       j.obstacles.push({ x: W + 26, type:"air", moi, w: moi ? 40 : 30, aile: 0 });
     } else {
-      j.obstacles.push({ x: W + 20, type:"sol", w: 13 + Math.random()*10 });
+      /* a partir de la moitie, des doubles blocs : le saut doit etre franc */
+      const double = j.dist > 45 && Math.random() < .3;
+      j.obstacles.push({ x: W + 20, type:"sol", w: double ? 26 + Math.random()*8 : 13 + Math.random()*10 });
     }
   };
 
@@ -1036,6 +1044,9 @@ function initSaut(){
     if (j.y >= sol - 1){ j.vy = -8.6; buzz(6); SON.saut(); }
   };
   cv.onpointerdown = e => { e.preventDefault(); sauter(); };
+  $("saut-next").style.display = "none";
+  $("saut-jauge").style.width = "0%";
+  $("saut-dist").textContent = "0 %";
 
   function boucle(){
     ctx.clearRect(0,0,W,H);
@@ -1051,8 +1062,11 @@ function initSaut(){
     ctx.lineTo(W, sol); ctx.closePath(); ctx.fill();
 
     if (j.demarre && !j.fini){
+      /* ca accelere du debut a la fin : c'est ce qui rend la course tendue
+         plutot que repetitive. La progression est calee pour garder ~16 s. */
+      j.vit = 3.2 + (j.dist/100)*2.9;
       j.defile += j.vit;
-      j.dist = Math.min(100, j.dist + j.vit/23);   // deux fois plus long qu'avant
+      j.dist = Math.min(100, j.dist + j.vit/40);
       poseObstacle();
     }
 
@@ -1125,7 +1139,7 @@ function initSaut(){
           : (j.y > sol - TAILLE*.62);
         if (touche){
           j.touches++; j.flash = 32;
-          j.dist = Math.max(0, j.dist - 8);
+          j.dist = Math.max(0, j.dist - 11);
           $("saut-etat").textContent = o.type === "air"
             ? "Fallait pas sauter 😬"
             : "Aïe 😬 On repart";
@@ -1184,7 +1198,7 @@ $("saut-next").addEventListener("click", ()=>{ cancelAnimationFrame(sautRAF); et
    ================================================================ */
 function initPuzzle(){
   const grille = $("puzzle");
-  const N = 3, TOTAL = N*N;
+  const N = 4, TOTAL = N*N;
   const url = PHOTOS.couple;
   let ordre = [...Array(TOTAL).keys()];
   let choisi = null, fini = false;
@@ -1202,7 +1216,8 @@ function initPuzzle(){
 
   function dessine(){
     grille.innerHTML = ordre.map((morceau, pos)=>{
-      const cx = (morceau % N) * 50, cy = Math.floor(morceau / N) * 50;
+      const pas = 100/(N-1);
+      const cx = (morceau % N) * pas, cy = Math.floor(morceau / N) * pas;
       const ok = morceau === pos;
       return '<div data-pos="' + pos + '" class="' + (ok ? "place" : "") + '"' +
              ' style="background-image:url(' + (url || "") + ');' +
@@ -1265,7 +1280,7 @@ function initLaby(){
   const cv = $("cv-laby");
   const { ctx, W, H } = prepCanvas(cv, 300);
 
-  const COLS = 7, LIGNES = 8;
+  const COLS = 9, LIGNES = 11;
   const cell = Math.min((W - 16) / COLS, (H - 16) / LIGNES);
   const ox = (W - cell*COLS) / 2, oy = (H - cell*LIGNES) / 2;
 
@@ -1423,14 +1438,14 @@ function initAttrape(){
   cancelAnimationFrame(attRAF); clearTimeout(attTimer);
   const cv = $("cv-attrape");
   const { ctx, W, H } = prepCanvas(cv, 300);
-  const CIBLE = 10, T = 62;
+  const CIBLE = 14, T = 58;
 
   const VANTARDISES = ["Trop lente !", "Raté !", "Même pas mal", "Je suis ici !", "Essaie encore"];
   const TOUCHES     = ["Aïe !", "Ouille", "Bon...", "D'accord d'accord"];
 
   const j = {
     prises: 0, x: W/2, y: H/2, fini: false, demarre: false,
-    delai: 1150, restant: 1, bulle: null, bulleT: 0, apparu: 0, rates: 0
+    delai: 1050, restant: 1, bulle: null, bulleT: 0, apparu: 0, rates: 0
   };
 
   function teleporte(){
@@ -1454,7 +1469,7 @@ function initAttrape(){
     const px = e.clientX - r.left, py = e.clientY - r.top;
     if (Math.hypot(px - j.x, py - j.y) < T*.5){
       j.prises++;
-      j.delai = Math.max(520, j.delai - 62);        // ca se resserre a chaque fois
+      j.delai = Math.max(430, j.delai - 48);        // ca se resserre a chaque fois
       j.bulle = TOUCHES[j.prises % TOUCHES.length];
       j.bulleT = 42;
       buzz(8); SON.coup();
@@ -1561,7 +1576,7 @@ let simonTimers = [];
 function initSimon(){
   simonTimers.forEach(clearTimeout); simonTimers = [];
   const NOTES = [392, 523, 659, 784];      // sol, do, mi, sol
-  const CIBLE = 5;
+  const CIBLE = 7;
   const pads = [...document.querySelectorAll("#simon button")];
   const zone = $("simon");
   const j = { seq: [], pos: 0, fini: false, demarre: false };
@@ -1587,8 +1602,9 @@ function initSimon(){
     zone.classList.add("bloque");
     j.pos = 0; pas();
     etat("👀 Regarde bien", "regarde");
-    j.seq.forEach((v, k)=> attendre(360 + k*560, ()=> allume(v, 330)));
-    attendre(360 + j.seq.length*560 + 120, ()=>{
+    const rythme = Math.max(330, 560 - j.seq.length*32);   // ca defile de plus en plus vite
+    j.seq.forEach((v, k)=> attendre(360 + k*rythme, ()=> allume(v, Math.max(190, rythme - 190))));
+    attendre(360 + j.seq.length*rythme + 120, ()=>{
       zone.classList.remove("bloque");
       j.pos = 0; pas();
       etat("👆 À toi de rejouer", "atoi");
@@ -1675,7 +1691,7 @@ function initCombat(){
     if (j.fini) return;
     j.demarre = true;
     j.coups++;
-    j.vieLouis = Math.max(0, j.vieLouis - 1.5);   // il faut environ 67 coups : c'est un vrai combat
+    j.vieLouis = Math.max(0, j.vieLouis - 1.05);  // environ 96 coups
     j.secousseL = 9;
     buzz(7);
     SON.coup();
@@ -1690,6 +1706,8 @@ function initCombat(){
     $("combat-etat").textContent = "Continue !";
   };
   cv.onpointerdown = e => { e.preventDefault(); frapper(); };
+  $("combat-next").style.display = "none";
+  $("combat-coups").textContent = "0 coup";
 
   function tete(img, x, y, taille, secousse, versLaDroite){
     ctx.save();
@@ -1715,7 +1733,7 @@ function initCombat(){
       /* je riposte, mais je ne peux jamais la descendre trop bas */
       /* je tape moins fort et moins souvent qu'elle, et sa barre ne descend
          jamais sous 45 % : elle doit voir qu'elle domine, pas qu'elle survit */
-      if (j.t % 50 === 0 && j.vieNat > 45){
+      if (j.t % 38 === 0 && j.vieNat > 45){
         j.vieNat = Math.max(45, j.vieNat - 2.2);
         j.secousseN = 11;
         j.monCoup = 14;                       // l'elan de ma tete vers elle
@@ -1798,14 +1816,14 @@ function initValises(){
   cancelAnimationFrame(valRAF);
   const cv = $("cv-valises");
   const { ctx, W, H } = prepCanvas(cv, 290);
-  const OBJECTIF = 18;
+  const OBJECTIF = 24;
   const solY = H - 26;
 
   const j = { x: W/2, prises: 0, objets: [], t: 0, fini: false, demarre: false, eclat: [] };
 
   const nouvelObjet = () => {
     const type = Math.random() < .28 ? "sac" : "valise";
-    j.objets.push({ x: 26 + Math.random()*(W - 52), y: -26, v: 2.2 + Math.random()*1.6, type, r: (Math.random()-.5)*.5 });
+    j.objets.push({ x: 26 + Math.random()*(W - 52), y: -26, v: 2.8 + Math.random()*2, type, r: (Math.random()-.5)*.5 });
   };
 
   const bouge = e => {
@@ -1820,6 +1838,8 @@ function initValises(){
   cv.onpointermove = e => { if (e.pressure > 0 || e.buttons || e.pointerType === "touch") bouge(e); };
   cv.ontouchstart = bouge;
   cv.ontouchmove  = bouge;
+  $("val-next").style.display = "none";
+  $("val-jauge").style.width = "0%";
 
   function boucle(){
     ctx.clearRect(0,0,W,H);
@@ -1832,7 +1852,7 @@ function initValises(){
 
     if (j.demarre && !j.fini){
       j.t++;
-      if (j.t % 30 === 0) nouvelObjet();
+      if (j.t % 26 === 0) nouvelObjet();
     }
 
     /* objets qui tombent */
@@ -1857,7 +1877,7 @@ function initValises(){
 
     /* attrape ou repart en haut : jamais de perte seche */
     j.objets = j.objets.filter(o=>{
-      if (o.y > solY - 20 && o.y < solY + 6 && Math.abs(o.x - j.x) < 30){
+      if (o.y > solY - 20 && o.y < solY + 6 && Math.abs(o.x - j.x) < 27){
         j.prises++;
         buzz(10);
         SON.attrape();
