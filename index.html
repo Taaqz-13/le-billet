@@ -241,18 +241,52 @@ p strong{color:var(--encre);font-weight:600}
 .jauge i{display:block;height:100%;width:0;background:var(--brique);border-radius:99px;transition:width .2s ease}
 
 /* les quatre pastilles de la sequence a repeter */
-.simon{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:16px}
+.simon{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
 .simon button{
-  aspect-ratio:1.35;border-radius:6px;opacity:.38;
-  box-shadow:inset 0 0 0 2px rgba(255,252,246,.4);
-  transition:opacity .12s ease, transform .12s ease;
+  aspect-ratio:1.18;border-radius:10px;
+  /* eteint : tres pale, pour que l'allumage se voie de loin */
+  opacity:.22;filter:saturate(.5);
+  box-shadow:inset 0 0 0 2px rgba(255,252,246,.5);
+  transition:opacity .1s ease, transform .1s ease, box-shadow .1s ease, filter .1s ease;
 }
-.simon button.on{opacity:1;transform:scale(1.04)}
+.simon button.on{
+  opacity:1;filter:saturate(1.15);transform:scale(1.06);
+  box-shadow:inset 0 0 0 3px rgba(255,252,246,.9), 0 0 0 5px rgba(255,252,246,.55), 0 10px 26px -8px rgba(34,48,63,.5);
+}
+/* l'etat du tour, impossible a manquer */
+.simon-etat{
+  margin-top:16px;padding:13px;border-radius:6px;text-align:center;
+  font-family:var(--mono);font-size:13px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;
+  transition:background .2s ease, color .2s ease;
+}
+.simon-etat.regarde{background:rgba(193,85,59,.14);color:var(--brique-fonce);box-shadow:inset 0 0 0 2px rgba(193,85,59,.35)}
+.simon-etat.atoi{background:rgba(74,124,89,.16);color:#2F5C3C;box-shadow:inset 0 0 0 2px rgba(74,124,89,.4)}
+/* les points de la sequence en cours */
+.simon-pas{display:flex;gap:7px;justify-content:center;margin-top:12px}
+.simon-pas i{width:9px;height:9px;border-radius:50%;background:var(--papier3);transition:all .2s ease}
+.simon-pas i.fait{background:var(--vert);transform:scale(1.25)}
 .simon.bloque button{pointer-events:none}
 .simon button:nth-child(1){background:var(--brique)}
 .simon button:nth-child(2){background:var(--vert)}
 .simon button:nth-child(3){background:var(--violette)}
 .simon button:nth-child(4){background:var(--ciel)}
+
+/* le puzzle : neuf morceaux d'une photo, echangeables deux a deux */
+.puzzle{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:14px;
+  aspect-ratio:1/1.05;border-radius:6px;overflow:hidden;
+  background:var(--papier3);box-shadow:0 14px 34px -22px rgba(34,48,63,.6);
+}
+.puzzle div{
+  background-size:300% 300%;background-color:var(--papier2);
+  position:relative;transition:transform .12s ease, box-shadow .12s ease;
+}
+.puzzle div.choisi{transform:scale(.93);box-shadow:inset 0 0 0 4px var(--brique);z-index:2}
+.puzzle div.place::after{
+  content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 2px rgba(74,124,89,.55);
+}
+.puzzle.fini div{box-shadow:none}
+.puzzle.fini{gap:0}
 
 /* les barres de vie du combat */
 .vies{display:flex;gap:14px;margin-top:14px}
@@ -432,8 +466,10 @@ p strong{color:var(--encre);font-weight:600}
       <button data-i="0"></button><button data-i="1"></button>
       <button data-i="2"></button><button data-i="3"></button>
     </div>
+    <div class="simon-etat" id="simon-etat">Appuie sur une couleur pour commencer</div>
+    <div class="simon-pas" id="simon-pas"></div>
     <div class="jauge"><i id="simon-jauge"></i></div>
-    <div class="score"><span id="simon-score">Série de 0</span><span id="simon-etat">Appuie pour commencer</span></div>
+    <div class="score"><span id="simon-score">Série de 0</span><span id="simon-reste"></span></div>
     <div class="consigne" id="simon-consigne">Si tu te trompes, je te rejoue la même séquence. Autant de fois qu'il faudra. 😌</div>
     <button class="btn mt" id="simon-next" style="display:none">Continuer 👉</button>
     <div class="spacer"></div>
@@ -450,6 +486,34 @@ p strong{color:var(--encre);font-weight:600}
     <div class="score"><span id="att-score">0 / 10</span><span id="att-etat">Touche l'écran pour lancer</span></div>
     <div class="consigne" id="att-consigne">Rater ne coûte rien, à part m'entendre me vanter. 😌</div>
     <button class="btn mt" id="att-next" style="display:none">Continuer 👉</button>
+    <div class="spacer"></div>
+  </section>
+
+  <!-- ============ 2 quinquies. MINI-JEU : LE PUZZLE ============ -->
+  <section class="screen" id="s-puzzle">
+    <div class="mot-titre">Tes lettres · le mot en fait 8</div>
+    <div class="letters top" id="letters-puzzle"></div>
+    <h2 class="mt">Remets-nous en place 🧩</h2>
+    <p class="mt">Touche deux morceaux pour les échanger. Il y a une photo là-dessous.</p>
+    <div class="puzzle" id="puzzle"></div>
+    <div class="jauge"><i id="puz-jauge"></i></div>
+    <div class="score"><span id="puz-score">0 / 9 en place</span><span id="puz-etat">À toi</span></div>
+    <div class="consigne" id="puz-consigne">Tu ne peux rien casser : échange autant de fois que tu veux. 😌</div>
+    <button class="btn mt" id="puz-next" style="display:none">Continuer 👉</button>
+    <div class="spacer"></div>
+  </section>
+
+  <!-- ============ 2 sexies. MINI-JEU : LE LABYRINTHE ============ -->
+  <section class="screen" id="s-laby">
+    <div class="mot-titre">Tes lettres · le mot en fait 8</div>
+    <div class="letters top" id="letters-laby"></div>
+    <h2 class="mt">Trouve la sortie 🌀</h2>
+    <p class="mt">Pose ton doigt sur le point brique et glisse jusqu'au point vert, sans traverser les murs.</p>
+    <canvas class="jeu-canvas mt" id="cv-laby" height="300"></canvas>
+    <div class="jauge"><i id="lab-jauge"></i></div>
+    <div class="score"><span id="lab-score">Départ</span><span id="lab-etat">Pose ton doigt sur le point</span></div>
+    <div class="consigne" id="lab-consigne">Si tu touches un mur, tu ne repars pas de zéro : tu reprends où tu en étais. 😌</div>
+    <button class="btn mt" id="lab-next" style="display:none">Continuer 👉</button>
     <div class="spacer"></div>
   </section>
 
@@ -623,6 +687,11 @@ const PARCOURS = [
   { type:"combat",  lettre:3 },
   { type:"simon",   lettre:6 },
   { type:"attrape", lettre:4 },
+  /* Ces deux-la ne donnent pas de lettre : a 8 lettres sur 8 elle aurait
+     le mot entier, et on perdrait toute la difficulte gagnee. Le puzzle
+     a sa propre recompense, la photo qui se reforme. */
+  { type:"puzzle" },
+  { type:"laby" },
   { type:"valise",  lettre:5 },
   { type:"enigme",  lettre:7, i:0 }
 ];
@@ -781,7 +850,7 @@ function paintLetters(target){
   /* Trie alphabetiquement, donc sans aucune indication de position :
      avec les lettres a leur place, le mot se lisait bien trop vite. */
   const gagnees = PARCOURS
-    .filter((p,i) => trouvees.has(i))
+    .filter((p,i) => trouvees.has(i) && p.lettre !== undefined)
     .map(p => mot[p.lettre])
     .sort();
   const cases = [];
@@ -793,7 +862,7 @@ function paintLetters(target){
 }
 
 function paintLettresPartout(){
-  ["letters-saut","letters-combat","letters-simon","letters-attrape","letters-quiz","letters-val","letters-big"]
+  ["letters-saut","letters-combat","letters-simon","letters-attrape","letters-puzzle","letters-laby","letters-quiz","letters-val","letters-big"]
     .forEach(id => paintLetters($(id)));
 }
 
@@ -837,6 +906,8 @@ function lanceEtape(){
   if (p.type === "combat") { show("s-combat");  initCombat(); }
   if (p.type === "simon")  { show("s-simon");   initSimon(); }
   if (p.type === "attrape"){ show("s-attrape"); initAttrape(); }
+  if (p.type === "puzzle") { show("s-puzzle");  initPuzzle(); }
+  if (p.type === "laby")   { show("s-laby");    initLaby(); }
   if (p.type === "valise") { show("s-valises"); initValises(); }
   if (p.type === "enigme") { idxEnigme = p.i;   show("s-quiz"); showEnigme(); }
 }
@@ -1106,6 +1177,243 @@ function initSaut(){
 $("saut-next").addEventListener("click", ()=>{ cancelAnimationFrame(sautRAF); etapeSuivante(); });
 
 /* ================================================================
+   MINI-JEU 5 : LE PUZZLE
+   Neuf morceaux d'une de nos photos, echanges deux a deux plutot que
+   glisses : au doigt, le taquin classique est penible. Sa recompense
+   n'est pas une lettre, c'est la photo qui se reforme.
+   ================================================================ */
+function initPuzzle(){
+  const grille = $("puzzle");
+  const N = 3, TOTAL = N*N;
+  const url = PHOTOS.couple;
+  let ordre = [...Array(TOTAL).keys()];
+  let choisi = null, fini = false;
+
+  /* on melange, en s'assurant qu'aucun morceau ne tombe par hasard
+     a sa place : sinon le depart parait deja a moitie resolu */
+  do {
+    for (let i = ordre.length - 1; i > 0; i--){
+      const k = Math.floor(Math.random()*(i+1));
+      [ordre[i], ordre[k]] = [ordre[k], ordre[i]];
+    }
+  } while (ordre.some((v,i) => v === i));
+
+  function enPlace(){ return ordre.filter((v,i) => v === i).length; }
+
+  function dessine(){
+    grille.innerHTML = ordre.map((morceau, pos)=>{
+      const cx = (morceau % N) * 50, cy = Math.floor(morceau / N) * 50;
+      const ok = morceau === pos;
+      return '<div data-pos="' + pos + '" class="' + (ok ? "place" : "") + '"' +
+             ' style="background-image:url(' + (url || "") + ');' +
+             'background-position:' + cx + '% ' + cy + '%"></div>';
+    }).join("");
+    [...grille.children].forEach(c => c.onclick = ()=> touche(parseInt(c.dataset.pos, 10)));
+    const n = enPlace();
+    $("puz-score").textContent = n + " / " + TOTAL + " en place";
+    $("puz-jauge").style.width = (n/TOTAL*100) + "%";
+  }
+
+  function touche(pos){
+    if (fini) return;
+    if (choisi === null){
+      choisi = pos;
+      grille.children[pos].classList.add("choisi");
+      note(620, .07, { type:"triangle", vol:.4 });
+      return;
+    }
+    if (choisi === pos){
+      grille.children[pos].classList.remove("choisi");
+      choisi = null;
+      return;
+    }
+    [ordre[choisi], ordre[pos]] = [ordre[pos], ordre[choisi]];
+    choisi = null;
+    buzz(6);
+    SON.attrape();
+    dessine();
+
+    if (enPlace() === TOTAL){
+      fini = true;
+      grille.classList.add("fini");
+      $("puz-etat").textContent = "C'est nous 🎉";
+      $("puz-consigne").textContent = "Voilà. Celle-là, tu la reverras tout à l'heure. 👀";
+      SON.arrivee();
+      etapeReussie();
+      $("puz-next").style.display = "block";
+      setTimeout(()=>$("puz-next").scrollIntoView({ behavior:"smooth", block:"end" }), 200);
+    }
+  }
+
+  grille.classList.remove("fini");
+  $("puz-next").style.display = "none";
+  $("puz-etat").textContent = "À toi";
+  $("puz-consigne").textContent = "Tu ne peux rien casser : échange autant de fois que tu veux. 😌";
+  dessine();
+}
+$("puz-next").addEventListener("click", etapeSuivante);
+
+/* ================================================================
+   MINI-JEU 6 : LE LABYRINTHE
+   Labyrinthe parfait genere par parcours en profondeur, donc toujours
+   resoluble. Toucher un mur ne renvoie pas au depart : le doigt reste
+   simplement bloque la, sinon c'est odieux au tactile.
+   ================================================================ */
+let labyRAF = null;
+function initLaby(){
+  cancelAnimationFrame(labyRAF);
+  const cv = $("cv-laby");
+  const { ctx, W, H } = prepCanvas(cv, 300);
+
+  const COLS = 7, LIGNES = 8;
+  const cell = Math.min((W - 16) / COLS, (H - 16) / LIGNES);
+  const ox = (W - cell*COLS) / 2, oy = (H - cell*LIGNES) / 2;
+
+  /* murs[c][l] = {haut, droite, bas, gauche} */
+  const murs = [];
+  for (let c = 0; c < COLS; c++){
+    murs[c] = [];
+    for (let l = 0; l < LIGNES; l++) murs[c][l] = { h:true, d:true, b:true, g:true, vu:false };
+  }
+  (function creuse(c, l){
+    murs[c][l].vu = true;
+    const dirs = [[0,-1,"h","b"], [1,0,"d","g"], [0,1,"b","h"], [-1,0,"g","d"]]
+      .sort(()=> Math.random() - .5);
+    for (const [dc, dl, ici, la] of dirs){
+      const nc = c + dc, nl = l + dl;
+      if (nc < 0 || nl < 0 || nc >= COLS || nl >= LIGNES || murs[nc][nl].vu) continue;
+      murs[c][l][ici] = false;
+      murs[nc][nl][la] = false;
+      creuse(nc, nl);
+    }
+  })(0, 0);
+
+  const centre = (c, l) => ({ x: ox + c*cell + cell/2, y: oy + l*cell + cell/2 });
+  const depart = { c:0, l:0 }, arrivee = { c:COLS-1, l:LIGNES-1 };
+
+  const j = { c:0, l:0, chemin:[{c:0,l:0}], actif:false, fini:false, flash:0, avances:1 };
+  const total = COLS + LIGNES;
+
+  function peutAller(c, l, nc, nl){
+    if (nc === c && nl === l - 1) return !murs[c][l].h;
+    if (nc === c + 1 && nl === l)  return !murs[c][l].d;
+    if (nc === c && nl === l + 1)  return !murs[c][l].b;
+    if (nc === c - 1 && nl === l)  return !murs[c][l].g;
+    return false;
+  }
+
+  function versCase(px, py){
+    return { c: Math.floor((px - ox)/cell), l: Math.floor((py - oy)/cell) };
+  }
+
+  function bouge(ev){
+    if (j.fini) return;
+    const r = cv.getBoundingClientRect();
+    const src = ev.touches && ev.touches[0] ? ev.touches[0] : ev;
+    const px = src.clientX - r.left, py = src.clientY - r.top;
+    const { c, l } = versCase(px, py);
+    if (c < 0 || l < 0 || c >= COLS || l >= LIGNES) return;
+
+    /* l'activation doit passer AVANT le test "meme case" : le doigt se pose
+       justement sur la case de depart, ou l'on se trouve deja */
+    if (!j.actif){
+      if (c === depart.c && l === depart.l){
+        j.actif = true;
+        $("lab-etat").textContent = "Glisse sans lâcher";
+        $("lab-score").textContent = "1 case";
+      }
+      return;
+    }
+    if (c === j.c && l === j.l) return;
+    if (Math.abs(c - j.c) + Math.abs(l - j.l) !== 1) return;   // une case a la fois
+
+    if (peutAller(j.c, j.l, c, l)){
+      /* revenir sur ses pas efface le trait, plutot que de le doubler */
+      const av = j.chemin[j.chemin.length - 2];
+      if (av && av.c === c && av.l === l) j.chemin.pop();
+      else j.chemin.push({ c, l });
+      j.c = c; j.l = l;
+      j.avances = Math.max(j.avances, j.chemin.length);
+      note(520 + j.chemin.length*14, .05, { type:"triangle", vol:.3 });
+      $("lab-jauge").style.width = Math.min(100, (j.chemin.length/(total*1.6))*100) + "%";
+      $("lab-score").textContent = j.chemin.length + " cases";
+      if (c === arrivee.c && l === arrivee.l){
+        j.fini = true;
+        $("lab-etat").textContent = "Sortie 🎉";
+        $("lab-consigne").textContent = "Trouvée. Tu peux continuer. 👀";
+        $("lab-jauge").style.width = "100%";
+        SON.arrivee();
+        etapeReussie();
+        $("lab-next").style.display = "block";
+        setTimeout(()=>$("lab-next").scrollIntoView({ behavior:"smooth", block:"end" }), 200);
+      }
+    } else {
+      if (j.flash <= 0){ j.flash = 16; buzz(10); SON.refus(); }
+    }
+  }
+
+  cv.onpointerdown = e => { e.preventDefault(); bouge(e); };
+  cv.onpointermove = e => { if (e.buttons || e.pointerType === "touch") { e.preventDefault(); bouge(e); } };
+  cv.ontouchmove  = e => { e.preventDefault(); bouge(e); };
+  cv.onpointerup  = () => {};
+
+  function boucle(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = "#FBF6EC"; ctx.fillRect(0,0,W,H);
+
+    /* le chemin deja parcouru */
+    if (j.chemin.length > 1){
+      ctx.strokeStyle = "rgba(74,124,89,.5)";
+      ctx.lineWidth = cell*.5; ctx.lineJoin = "round"; ctx.lineCap = "round";
+      ctx.beginPath();
+      j.chemin.forEach((p, i)=>{
+        const { x, y } = centre(p.c, p.l);
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      });
+      ctx.stroke();
+    }
+
+    /* les murs */
+    ctx.strokeStyle = j.flash > 0 ? "#C1553B" : "#8FA9C4";
+    ctx.lineWidth = 3; ctx.lineCap = "round";
+    for (let c = 0; c < COLS; c++){
+      for (let l = 0; l < LIGNES; l++){
+        const x = ox + c*cell, y = oy + l*cell, m = murs[c][l];
+        ctx.beginPath();
+        if (m.h){ ctx.moveTo(x, y); ctx.lineTo(x + cell, y); }
+        if (m.g){ ctx.moveTo(x, y); ctx.lineTo(x, y + cell); }
+        if (m.d && c === COLS-1){ ctx.moveTo(x + cell, y); ctx.lineTo(x + cell, y + cell); }
+        if (m.b && l === LIGNES-1){ ctx.moveTo(x, y + cell); ctx.lineTo(x + cell, y + cell); }
+        ctx.stroke();
+      }
+    }
+    if (j.flash > 0) j.flash--;
+
+    /* depart et arrivee */
+    const d = centre(depart.c, depart.l), a = centre(arrivee.c, arrivee.l);
+    ctx.fillStyle = "#C1553B";
+    ctx.beginPath(); ctx.arc(d.x, d.y, cell*.24, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#4A7C59";
+    ctx.beginPath(); ctx.arc(a.x, a.y, cell*.28, 0, Math.PI*2); ctx.fill();
+
+    /* la position courante */
+    if (j.actif){
+      const p = centre(j.c, j.l);
+      ctx.fillStyle = "#22303F";
+      ctx.beginPath(); ctx.arc(p.x, p.y, cell*.2, 0, Math.PI*2); ctx.fill();
+    }
+
+    labyRAF = requestAnimationFrame(boucle);
+  }
+  $("lab-next").style.display = "none";
+  $("lab-jauge").style.width = "0%";
+  $("lab-score").textContent = "Départ";
+  $("lab-etat").textContent = "Pose ton doigt sur le point brique";
+  boucle();
+}
+$("lab-next").addEventListener("click", ()=>{ cancelAnimationFrame(labyRAF); etapeSuivante(); });
+
+/* ================================================================
    MINI-JEU 4 : ATTRAPE-MOI
    Ma tete se teleporte et le delai se resserre a chaque prise. Rater
    ne coute rien : je me contente de me vanter et je repars ailleurs.
@@ -1260,6 +1568,15 @@ function initSimon(){
 
   const attendre = (ms, fn) => simonTimers.push(setTimeout(fn, ms));
 
+  function etat(texte, classe){
+    const el = $("simon-etat");
+    el.textContent = texte;
+    el.className = "simon-etat" + (classe ? " " + classe : "");
+  }
+  function pas(){
+    $("simon-pas").innerHTML = j.seq.map((_,k)=>
+      '<i class="' + (k < j.pos ? "fait" : "") + '"></i>').join("");
+  }
   function allume(i, duree){
     pads[i].classList.add("on");
     note(NOTES[i], .3, { type:"triangle", vol:.5 });
@@ -1268,12 +1585,13 @@ function initSimon(){
 
   function joueSequence(){
     zone.classList.add("bloque");
-    $("simon-etat").textContent = "Regarde bien...";
+    j.pos = 0; pas();
+    etat("👀 Regarde bien", "regarde");
     j.seq.forEach((v, k)=> attendre(360 + k*560, ()=> allume(v, 330)));
     attendre(360 + j.seq.length*560 + 120, ()=>{
       zone.classList.remove("bloque");
-      j.pos = 0;
-      $("simon-etat").textContent = "À toi !";
+      j.pos = 0; pas();
+      etat("👆 À toi de rejouer", "atoi");
     });
   }
 
@@ -1293,19 +1611,20 @@ function initSimon(){
 
     if (i === j.seq[j.pos]){
       j.pos++;
+      pas();
       if (j.pos === j.seq.length){
         if (j.seq.length >= CIBLE){
           j.fini = true;
           zone.classList.add("bloque");
           $("simon-jauge").style.width = "100%";
-          $("simon-etat").textContent = "Parfait 🎉";
+          etat("Parfait 🎉", "atoi");
           $("simon-consigne").textContent = "Cinq d'affilée, de mémoire. Une lettre de plus. 👀";
           SON.arrivee();
           etapeReussie();
           $("simon-next").style.display = "block";
           setTimeout(()=>$("simon-next").scrollIntoView({ behavior:"smooth", block:"end" }), 200);
         } else {
-          $("simon-etat").textContent = "Bien vu 👌";
+          etat("Bien vu 👌 On rallonge", "atoi");
           attendre(620, tourSuivant);
         }
       }
@@ -1313,12 +1632,13 @@ function initSimon(){
       /* on ne remet jamais a zero : la meme sequence est simplement rejouee */
       SON.refus();
       buzz([30,50,30]);
-      $("simon-etat").textContent = "Presque, je te la remets";
+      etat("Presque, je te la remets", "regarde");
       attendre(700, joueSequence);
     }
   });
 
-  $("simon-etat").textContent = "Appuie sur une couleur pour commencer";
+  etat("Appuie sur une couleur pour commencer");
+  $("simon-pas").innerHTML = "";
   $("simon-score").textContent = "Série de 0";
   $("simon-jauge").style.width = "0%";
   $("simon-next").style.display = "none";
