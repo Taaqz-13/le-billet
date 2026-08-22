@@ -321,6 +321,18 @@ p strong{color:var(--encre);font-weight:600}
 .note .sig{font-family:var(--serif);font-size:17px;line-height:1.55;color:var(--encre)}
 .note .from{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--violette);margin-bottom:9px}
 
+/* le bouton de coupure du son, discret mais toujours atteignable */
+#son-btn{
+  position:fixed;z-index:70;
+  top:calc(var(--sat) + 10px);right:12px;
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  background:rgba(255,252,246,.82);box-shadow:0 1px 0 rgba(34,48,63,.05), inset 0 0 0 1.5px var(--papier3);
+  transition:transform .12s ease, opacity .2s ease;opacity:.75;
+}
+#son-btn:active{transform:scale(.9)}
+#son-btn.muet{opacity:.45}
+
 .spacer{flex:1;min-height:14px}
 .mt{margin-top:13px}
 .mt-l{margin-top:24px}
@@ -330,6 +342,7 @@ p strong{color:var(--encre);font-weight:600}
 <body>
 
 <canvas id="confetti"></canvas>
+<button id="son-btn" title="Couper le son">🔊</button>
 
 <div class="wrap">
 
@@ -574,6 +587,93 @@ const $ = id => document.getElementById(id);
 function buzz(ms){ try{ if (navigator.vibrate) navigator.vibrate(ms); }catch(_){} }
 
 /* ================================================================
+   LE SON
+   Tout est synthetise a la volee : aucun fichier audio a charger, donc
+   rien de plus a chiffrer ni a telecharger. Sur iPhone, un AudioContext
+   ne demarre qu'apres un vrai geste : on le reveille au premier appui.
+   ================================================================ */
+let AC = null, sonActif = true, sortie = null;
+
+function initAudio(){
+  if (AC) return;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return;
+  try {
+    AC = new Ctx();
+    sortie = AC.createGain();
+    sortie.gain.value = .45;          // calibre a l'oreille : audible sans agresser
+    sortie.connect(AC.destination);
+  } catch(_){ AC = null; }
+}
+function reveilAudio(){
+  initAudio();
+  if (AC && AC.state === "suspended") AC.resume().catch(()=>{});
+}
+
+/* une note, avec attaque et extinction douces : sans elles, chaque son
+   claque desagreablement dans le haut-parleur du telephone */
+function note(freq, duree, o){
+  if (!AC || !sonActif) return;
+  o = o || {};
+  const t = AC.currentTime + (o.delai || 0);
+  const vol = (o.vol == null ? 1 : o.vol);
+  try {
+    const osc = AC.createOscillator(), g = AC.createGain();
+    osc.type = o.type || "sine";
+    osc.frequency.setValueAtTime(freq, t);
+    if (o.glide) osc.frequency.exponentialRampToValueAtTime(Math.max(30, o.glide), t + duree);
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.exponentialRampToValueAtTime(Math.max(.001, vol), t + .014);
+    g.gain.exponentialRampToValueAtTime(.0001, t + duree);
+    osc.connect(g); g.connect(sortie);
+    osc.start(t); osc.stop(t + duree + .03);
+  } catch(_){}
+}
+
+/* du bruit filtre, pour les impacts et le frottement du grattage */
+function bruit(duree, o){
+  if (!AC || !sonActif) return;
+  o = o || {};
+  try {
+    const n = Math.max(1, Math.floor(AC.sampleRate * duree));
+    const buf = AC.createBuffer(1, n, AC.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random()*2 - 1) * (1 - i/n);
+    const src = AC.createBufferSource(); src.buffer = buf;
+    const f = AC.createBiquadFilter();
+    f.type = "bandpass"; f.frequency.value = o.freq || 1200; f.Q.value = o.q || 1;
+    const g = AC.createGain(); g.gain.value = (o.vol == null ? .4 : o.vol);
+    src.connect(f); f.connect(g); g.connect(sortie);
+    src.start();
+  } catch(_){}
+}
+
+const SON = {
+  touche:  ()=> note(680, .05, { type:"triangle", vol:.22 }),
+  effacer: ()=> note(340, .07, { type:"triangle", vol:.18 }),
+  refus:   ()=> note(320, .22, { type:"sawtooth", vol:.16, glide:150 }),
+  ouvre:   ()=> [523,659,784,1047].forEach((f,i)=> note(f, .34, { vol:.26, delai:i*.075, type:"triangle" })),
+  saut:    ()=> note(420, .14, { vol:.22, glide:760 }),
+  aie:     ()=> { bruit(.14, { freq:220, vol:.32, q:.8 }); note(150, .2, { type:"square", vol:.12, glide:80 }); },
+  coup:    ()=> { bruit(.08, { freq:900, vol:.3, q:.7 }); note(190, .1, { type:"square", vol:.16, glide:85 }); },
+  attrape: ()=> note(880, .09, { type:"triangle", vol:.24, glide:1350 }),
+  bravo:   ()=> [523,659,784].forEach((f,i)=> note(f, .26, { vol:.24, delai:i*.065, type:"triangle" })),
+  arrivee: ()=> [659,784,988,1319].forEach((f,i)=> note(f, .34, { vol:.25, delai:i*.08, type:"triangle" })),
+  ko:      ()=> { bruit(.3, { freq:160, vol:.35, q:.6 });
+                  [392,523,659,880].forEach((f,i)=> note(f, .4, { vol:.26, delai:.1 + i*.09, type:"triangle" })); },
+  gratte:  ()=> bruit(.05, { freq:2800, vol:.09, q:.5 }),
+  reveal:  ()=> [392,523,659,784,1047,1319].forEach((f,i)=> note(f, .75, { vol:.26, delai:i*.115, type:"triangle" }))
+};
+
+$("son-btn").addEventListener("click", ()=>{
+  sonActif = !sonActif;
+  reveilAudio();
+  $("son-btn").textContent = sonActif ? "🔊" : "🔇";
+  $("son-btn").classList.toggle("muet", !sonActif);
+  if (sonActif) SON.touche();
+});
+
+/* ================================================================
    LE BILLET
    ================================================================ */
 const CELLS = [
@@ -694,6 +794,7 @@ function repondre(i, btn){
     btn.querySelector(".mark").textContent = "✓";
     [...$("choices").children].forEach(b => b.setAttribute("disabled",""));
     etapeReussie();
+    SON.bravo();
     fb.className = "feedback hit on";
     fb.innerHTML = "<b>Bravo 🎯</b> " + e.apres;
     $("passer").style.display = "none";
@@ -706,6 +807,7 @@ function repondre(i, btn){
   btn.classList.add("bad", "off");
   btn.querySelector(".mark").textContent = "×";
   buzz(8);
+  SON.refus();
   const reste = [...$("choices").children].filter(b => !b.classList.contains("off")).length;
   /* la pique propre a l'option choisie, sinon la reaction generique */
   const pique = (e.reactions && e.reactions[i]) ? e.reactions[i] : RATES[Math.min(essais, RATES.length) - 1];
@@ -778,7 +880,7 @@ function initSaut(){
     if (j.fini) return;
     j.demarre = true;
     $("saut-etat").textContent = "Tape pour sauter";
-    if (j.y >= sol - 1){ j.vy = -8.6; buzz(6); }
+    if (j.y >= sol - 1){ j.vy = -8.6; buzz(6); SON.saut(); }
   };
   cv.onpointerdown = e => { e.preventDefault(); sauter(); };
 
@@ -840,6 +942,7 @@ function initSaut(){
           j.dist = Math.max(0, j.dist - 8);
           $("saut-etat").textContent = "Aïe 😬 On repart";
           buzz([12,50,12]);
+          SON.aie();
           break;
         }
       }
@@ -873,6 +976,7 @@ function initSaut(){
     if (j.dist >= 100 && !j.fini){
       j.fini = true;
       $("saut-etat").textContent = "Arrivée 🎉";
+      SON.arrivee();
       $("saut-consigne").textContent = "Bien joué. Une lettre de plus pour toi. 👀";
       etapeReussie();
       $("saut-next").style.display = "block";
@@ -913,6 +1017,7 @@ function initCombat(){
     j.vieLouis = Math.max(0, j.vieLouis - 2.6);
     j.secousseL = 9;
     buzz(7);
+    SON.coup();
     for (let k = 0; k < 5; k++)
       j.etoiles.push({ x: W*.72, y: H*.42, vx:(Math.random()-.5)*5, vy:-1-Math.random()*3.4, v:15 });
     if (j.coups % 5 === 0){
@@ -950,6 +1055,7 @@ function initCombat(){
         j.vieNat = Math.max(26, j.vieNat - 3.2);
         j.secousseN = 8;
         buzz(4);
+        SON.aie();
       }
     }
 
@@ -990,6 +1096,7 @@ function initCombat(){
     if (j.vieLouis <= 0 && !j.fini){
       j.fini = true;
       $("combat-etat").textContent = "K.O. 🏆";
+      SON.ko();
       $("combat-consigne").textContent = "Voilà. Tu m'as mis au sol, et tu as gagné une lettre. 👀";
       etapeReussie();
       $("combat-next").style.display = "block";
@@ -1072,6 +1179,7 @@ function initValises(){
       if (o.y > solY - 20 && o.y < solY + 6 && Math.abs(o.x - j.x) < 30){
         j.prises++;
         buzz(10);
+        SON.attrape();
         for (let k = 0; k < 7; k++)
           j.eclat.push({ x:o.x, y:solY-16, vx:(Math.random()-.5)*3.4, vy:-Math.random()*3.2, v:16 });
         return false;
@@ -1106,6 +1214,7 @@ function initValises(){
     if (j.prises >= OBJECTIF && !j.fini){
       j.fini = true;
       $("val-etat").textContent = "Valise bouclée 🎉";
+      SON.arrivee();
       etapeReussie();
       $("val-next").style.display = "block";
       setTimeout(()=>$("val-next").scrollIntoView({ behavior:"smooth", block:"end" }), 200);
@@ -1188,7 +1297,14 @@ function onStart(ev){
   erase(ptFrom(ev));
   $("scratch-hint").textContent = "Continue, ça vient.";
 }
-function onMove(ev){ if (!scratching || done) return; ev.preventDefault(); erase(ptFrom(ev)); checkProgress(); }
+let grattTick = 0;
+function onMove(ev){
+  if (!scratching || done) return;
+  ev.preventDefault();
+  erase(ptFrom(ev));
+  if (++grattTick % 7 === 0) SON.gratte();   // sinon le frottement sature
+  checkProgress();
+}
 function onEnd(){ scratching = false; lastPt = null; }
 cv.addEventListener("touchstart", onStart, { passive:false });
 cv.addEventListener("touchmove",  onMove,  { passive:false });
@@ -1214,6 +1330,7 @@ function revealDone(){
   cv.parentElement.classList.add("ready");
   cv.classList.add("gone");
   buzz([16,60,16,60,30]);
+  SON.reveal();
   setTimeout(()=>{
     $("full-ticket-slot").className = "ticket";
     $("full-ticket-slot").innerHTML = buildTicket(true);
@@ -1311,9 +1428,10 @@ function construitPave(){
   [...$("pave").children].forEach(b=>{
     b.addEventListener("click", ()=>{
       const t = b.dataset.t;
-      if (t === "eff"){ saisie = saisie.slice(0,-1); paintCases(); return; }
+      reveilAudio();                 // premier geste : c'est ici que le son s'autorise
+      if (t === "eff"){ saisie = saisie.slice(0,-1); SON.effacer(); paintCases(); return; }
       if (t === "ok"){ valideCode(); return; }
-      if (saisie.length < 4){ saisie += t; buzz(5); paintCases(); }
+      if (saisie.length < 4){ saisie += t; buzz(5); SON.touche(); paintCases(); }
       if (saisie.length === 4) setTimeout(valideCode, 180);
     });
   });
@@ -1372,6 +1490,7 @@ async function valideCode(){
     $("photo-nathalie").src = PHOTOS.nathalie;
     chargeLeReste(code);
     buzz([14,50,14]);
+    SON.ouvre();
     show("s-intro");
   } catch (err) {
     /* l'indice devient plus explicite a chaque essai : le dernier donne
@@ -1384,6 +1503,7 @@ async function valideCode(){
     const i = Math.min(ratesCode, CONFIG.indicesCode.length - 1);
     $("code-aide").textContent = CONFIG.indicesCode[i];
     buzz([40,60,40]);
+    SON.refus();
   }
 }
 
