@@ -438,6 +438,20 @@ p strong{color:var(--encre);font-weight:600}
     <div class="spacer"></div>
   </section>
 
+  <!-- ============ 2 quater. MINI-JEU : ATTRAPE-MOI ============ -->
+  <section class="screen" id="s-attrape">
+    <div class="mot-titre">Le mot à trouver</div>
+    <div class="letters top" id="letters-attrape"></div>
+    <h2 class="mt">Attrape-moi si tu peux 🏃</h2>
+    <p class="mt">Je me téléporte partout. Tape sur ma tête, dix fois, et de plus en plus vite.</p>
+    <canvas class="jeu-canvas mt" id="cv-attrape" height="300"></canvas>
+    <div class="jauge"><i id="att-jauge"></i></div>
+    <div class="score"><span id="att-score">0 / 10</span><span id="att-etat">Touche l'écran pour lancer</span></div>
+    <div class="consigne" id="att-consigne">Rater ne coûte rien, à part m'entendre me vanter. 😌</div>
+    <button class="btn mt" id="att-next" style="display:none">Continuer 👉</button>
+    <div class="spacer"></div>
+  </section>
+
   <!-- ============ 3. LES ENIGMES ============ -->
   <section class="screen" id="s-quiz">
     <div class="mot-titre">Le mot à trouver</div>
@@ -473,7 +487,7 @@ p strong{color:var(--encre);font-weight:600}
     <div class="eyebrow mt center">🏆 Tout est débloqué</div>
     <h2 class="mt center">Il te manque un mot.</h2>
     <div class="letters" id="letters-big"></div>
-    <p class="mt-l center">Cinq lettres sur huit : c'est tout ce que tu as gagné. Les trois autres, je les garde.</p>
+    <p class="mt-l center">Six lettres sur huit : c'est tout ce que tu as gagné. Les deux dernières, je les garde.</p>
     <p class="mt center"><strong>Une idée en tête ? Garde-la pour toi. 🤔</strong></p>
     <p class="mt center" style="font-size:14.5px">Appuie sur le bouton, et on va voir si tu as vu juste. Même si tu sèches complètement, appuie : je ne vais pas te laisser comme ça. 😏</p>
     <div class="spacer"></div>
@@ -607,6 +621,7 @@ const PARCOURS = [
   { type:"saut",    lettre:2 },
   { type:"combat",  lettre:3 },
   { type:"simon",   lettre:6 },
+  { type:"attrape", lettre:4 },
   { type:"valise",  lettre:5 },
   { type:"enigme",  lettre:7, i:0 }
 ];
@@ -755,7 +770,7 @@ function paintLetters(target){
 }
 
 function paintLettresPartout(){
-  ["letters-saut","letters-combat","letters-simon","letters-quiz","letters-val","letters-big"]
+  ["letters-saut","letters-combat","letters-simon","letters-attrape","letters-quiz","letters-val","letters-big"]
     .forEach(id => paintLetters($(id)));
 }
 
@@ -798,6 +813,7 @@ function lanceEtape(){
   if (p.type === "saut")   { show("s-saut");    initSaut(); }
   if (p.type === "combat") { show("s-combat");  initCombat(); }
   if (p.type === "simon")  { show("s-simon");   initSimon(); }
+  if (p.type === "attrape"){ show("s-attrape"); initAttrape(); }
   if (p.type === "valise") { show("s-valises"); initValises(); }
   if (p.type === "enigme") { idxEnigme = p.i;   show("s-quiz"); showEnigme(); }
 }
@@ -1021,6 +1037,143 @@ function initSaut(){
   boucle();
 }
 $("saut-next").addEventListener("click", ()=>{ cancelAnimationFrame(sautRAF); etapeSuivante(); });
+
+/* ================================================================
+   MINI-JEU 4 : ATTRAPE-MOI
+   Ma tete se teleporte et le delai se resserre a chaque prise. Rater
+   ne coute rien : je me contente de me vanter et je repars ailleurs.
+   ================================================================ */
+let attRAF = null, attTimer = null;
+function initAttrape(){
+  cancelAnimationFrame(attRAF); clearTimeout(attTimer);
+  const cv = $("cv-attrape");
+  const { ctx, W, H } = prepCanvas(cv, 300);
+  const CIBLE = 10, T = 62;
+
+  const VANTARDISES = ["Trop lente !", "Raté !", "Même pas mal", "Je suis ici !", "Essaie encore"];
+  const TOUCHES     = ["Aïe !", "Ouille", "Bon...", "D'accord d'accord"];
+
+  const j = {
+    prises: 0, x: W/2, y: H/2, fini: false, demarre: false,
+    delai: 1500, restant: 1, bulle: null, bulleT: 0, apparu: 0, rates: 0
+  };
+
+  function teleporte(){
+    const m = T*.62;
+    let nx, ny, essais = 0;
+    do {
+      nx = m + Math.random()*(W - m*2);
+      ny = m + Math.random()*(H - m*2);
+      essais++;
+    } while (essais < 12 && Math.hypot(nx - j.x, ny - j.y) < W*.28);  // jamais deux fois au meme endroit
+    j.x = nx; j.y = ny;
+    j.apparu = performance.now();
+    j.restant = 1;
+  }
+
+  cv.onpointerdown = e => {
+    e.preventDefault();
+    if (j.fini) return;
+    if (!j.demarre){ j.demarre = true; teleporte(); $("att-etat").textContent = "Vas-y !"; return; }
+    const r = cv.getBoundingClientRect();
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    if (Math.hypot(px - j.x, py - j.y) < T*.58){
+      j.prises++;
+      j.delai = Math.max(680, j.delai - 78);        // ca se resserre a chaque fois
+      j.bulle = TOUCHES[j.prises % TOUCHES.length];
+      j.bulleT = 42;
+      buzz(8); SON.coup();
+      for (let k = 0; k < 7; k++)
+        j.etoilesAjout && j.etoilesAjout(j.x, j.y);
+      $("att-score").textContent = j.prises + " / " + CIBLE;
+      $("att-jauge").style.width = (j.prises/CIBLE*100) + "%";
+      if (j.prises >= CIBLE){
+        j.fini = true;
+        $("att-etat").textContent = "Attrapé 🎉";
+        $("att-consigne").textContent = "Dix fois. Je n'ai plus nulle part où aller. 👀";
+        SON.arrivee();
+        etapeReussie();
+        $("att-next").style.display = "block";
+        setTimeout(()=>$("att-next").scrollIntoView({ behavior:"smooth", block:"end" }), 200);
+      } else {
+        teleporte();
+      }
+    } else {
+      j.rates++;
+      SON.refus();
+    }
+  };
+
+  const etoiles = [];
+  j.etoilesAjout = (x, y) => etoiles.push({ x, y, vx:(Math.random()-.5)*5, vy:-1-Math.random()*3.4, v:15 });
+
+  function boucle(){
+    ctx.clearRect(0,0,W,H);
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,"#FBF6EC"); g.addColorStop(1,"#F1E4D2");
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+
+    if (j.demarre && !j.fini){
+      const ecoule = performance.now() - j.apparu;
+      j.restant = Math.max(0, 1 - ecoule/j.delai);
+      if (j.restant <= 0){
+        j.bulle = VANTARDISES[(j.rates++) % VANTARDISES.length];
+        j.bulleT = 40;
+        teleporte();
+      }
+    }
+
+    /* le cercle qui se vide : le temps qu'il me reste avant de filer */
+    if (j.demarre && !j.fini){
+      ctx.beginPath();
+      ctx.arc(j.x, j.y, T*.62, -Math.PI/2, -Math.PI/2 + Math.PI*2*j.restant);
+      ctx.strokeStyle = "rgba(193,85,59,.35)"; ctx.lineWidth = 3; ctx.stroke();
+    }
+
+    /* ma tete */
+    if (j.demarre && !j.fini){
+      ctx.save();
+      ctx.translate(j.x, j.y);
+      ctx.beginPath();
+      ctx.ellipse(0, T*.52, T*.3, T*.08, 0, 0, Math.PI*2);
+      ctx.fillStyle = "rgba(34,48,63,.13)"; ctx.fill();
+      if (IMAGES.teteLouis) ctx.drawImage(IMAGES.teteLouis, -T/2, -T/2, T, T);
+      else { ctx.fillStyle = "#C1553B"; ctx.beginPath(); ctx.arc(0,0,T*.4,0,Math.PI*2); ctx.fill(); }
+      ctx.restore();
+    }
+
+    for (let i = etoiles.length - 1; i >= 0; i--){
+      const p = etoiles[i];
+      p.x += p.vx; p.y += p.vy; p.vy += .24; p.v--;
+      ctx.globalAlpha = Math.max(0, p.v/15);
+      ctx.fillStyle = "#B58A2B"; ctx.fillRect(p.x, p.y, 4, 4);
+      ctx.globalAlpha = 1;
+      if (p.v <= 0) etoiles.splice(i, 1);
+    }
+
+    /* ce que je lance en m'echappant */
+    if (j.bulleT > 0 && j.bulle){
+      j.bulleT--;
+      ctx.font = "600 13px -apple-system, system-ui, sans-serif";
+      const larg = ctx.measureText(j.bulle).width + 20, haut = 26;
+      const bx = Math.max(6, Math.min(W - larg - 6, j.x - larg/2));
+      const by = Math.max(6, j.y - T*.72 - haut);
+      ctx.globalAlpha = Math.min(1, j.bulleT/14);
+      ctx.fillStyle = "#FFFCF6"; ctx.strokeStyle = "#E5D8C4"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(bx, by, larg, haut, 8); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#22303F"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(j.bulle, bx + larg/2, by + haut/2);
+      ctx.globalAlpha = 1;
+    }
+
+    attRAF = requestAnimationFrame(boucle);
+  }
+  $("att-score").textContent = "0 / " + CIBLE;
+  $("att-jauge").style.width = "0%";
+  $("att-next").style.display = "none";
+  boucle();
+}
+$("att-next").addEventListener("click", ()=>{ cancelAnimationFrame(attRAF); etapeSuivante(); });
 
 /* ================================================================
    MINI-JEU 3 : REPETE LA SEQUENCE
