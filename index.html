@@ -392,7 +392,7 @@ p strong{color:var(--encre);font-weight:600}
 
   <!-- ============ 2. MINI-JEU : SAUTE ============ -->
   <section class="screen" id="s-saut">
-    <div class="mot-titre">Le mot à trouver</div>
+    <div class="mot-titre">Tes lettres · le mot en fait 8</div>
     <div class="letters top" id="letters-saut"></div>
     <h2 class="mt">Saute, ma beauté 💫</h2>
     <p class="mt" id="saut-txt">Tape l'écran pour sauter par-dessus les blocs. Tiens jusqu'au bout.</p>
@@ -406,7 +406,7 @@ p strong{color:var(--encre);font-weight:600}
 
   <!-- ============ 2 bis. MINI-JEU : LE COMBAT ============ -->
   <section class="screen" id="s-combat">
-    <div class="mot-titre">Le mot à trouver</div>
+    <div class="mot-titre">Tes lettres · le mot en fait 8</div>
     <div class="letters top" id="letters-combat"></div>
     <h2 class="mt">Nat contre moi 🥊</h2>
     <p class="mt">Tape l'écran le plus vite possible. Tu as le droit de ne pas me ménager.</p>
@@ -423,7 +423,7 @@ p strong{color:var(--encre);font-weight:600}
 
   <!-- ============ 2 ter. MINI-JEU : REPETE LA SEQUENCE ============ -->
   <section class="screen" id="s-simon">
-    <div class="mot-titre">Le mot à trouver</div>
+    <div class="mot-titre">Tes lettres · le mot en fait 8</div>
     <div class="letters top" id="letters-simon"></div>
     <h2 class="mt">Répète après moi 🎵</h2>
     <p class="mt">Regarde dans quel ordre ça s'allume, puis refais exactement pareil.</p>
@@ -440,7 +440,7 @@ p strong{color:var(--encre);font-weight:600}
 
   <!-- ============ 2 quater. MINI-JEU : ATTRAPE-MOI ============ -->
   <section class="screen" id="s-attrape">
-    <div class="mot-titre">Le mot à trouver</div>
+    <div class="mot-titre">Tes lettres · le mot en fait 8</div>
     <div class="letters top" id="letters-attrape"></div>
     <h2 class="mt">Attrape-moi si tu peux 🏃</h2>
     <p class="mt">Je me téléporte partout. Tape sur ma tête, dix fois, et de plus en plus vite.</p>
@@ -454,7 +454,7 @@ p strong{color:var(--encre);font-weight:600}
 
   <!-- ============ 3. LES ENIGMES ============ -->
   <section class="screen" id="s-quiz">
-    <div class="mot-titre">Le mot à trouver</div>
+    <div class="mot-titre">Tes lettres · le mot en fait 8</div>
     <div class="letters top" id="letters-quiz"></div>
     <div class="dots" id="dots"></div>
     <h2 class="mt" id="q-title">Question</h2>
@@ -468,7 +468,7 @@ p strong{color:var(--encre);font-weight:600}
 
   <!-- ============ 4. MINI-JEU : LES VALISES ============ -->
   <section class="screen" id="s-valises">
-    <div class="mot-titre">Le mot à trouver</div>
+    <div class="mot-titre">Tes lettres · le mot en fait 8</div>
     <div class="letters top" id="letters-val"></div>
     <h2 class="mt">Fais ta valise 🧳</h2>
     <p class="mt">Glisse ton doigt pour déplacer le chariot et rattrape ce qui tombe.</p>
@@ -487,7 +487,7 @@ p strong{color:var(--encre);font-weight:600}
     <div class="eyebrow mt center">🏆 Tout est débloqué</div>
     <h2 class="mt center">Il te manque un mot.</h2>
     <div class="letters" id="letters-big"></div>
-    <p class="mt-l center">Six lettres sur huit : c'est tout ce que tu as gagné. Les deux dernières, je les garde.</p>
+    <p class="mt-l center">Tu as gagné six des huit lettres. Elles sont dans le désordre, et je ne te dirai pas où elles vont.</p>
     <p class="mt center"><strong>Une idée en tête ? Garde-la pour toi. 🤔</strong></p>
     <p class="mt center" style="font-size:14.5px">Appuie sur le bouton, et on va voir si tu as vu juste. Même si tu sèches complètement, appuie : je ne vais pas te laisser comme ça. 😏</p>
     <div class="spacer"></div>
@@ -763,10 +763,18 @@ function buildTicket(full){
 function paintLetters(target){
   if (!target) return;
   const mot = CONFIG.destination.ville;
-  const vues = new Set(PARCOURS.filter((p,i) => trouvees.has(i)).map(p => p.lettre));
-  target.innerHTML = [...mot].map((ch,i)=>
-    '<span class="' + (vues.has(i) ? "got" : "") + '">' + (vues.has(i) ? ch : "") + '</span>'
-  ).join("");
+  /* Trie alphabetiquement, donc sans aucune indication de position :
+     avec les lettres a leur place, le mot se lisait bien trop vite. */
+  const gagnees = PARCOURS
+    .filter((p,i) => trouvees.has(i))
+    .map(p => mot[p.lettre])
+    .sort();
+  const cases = [];
+  for (let i = 0; i < mot.length; i++){
+    const ch = gagnees[i];
+    cases.push('<span class="' + (ch ? "got" : "") + '">' + (ch || "") + '</span>');
+  }
+  target.innerHTML = cases.join("");
 }
 
 function paintLettresPartout(){
