@@ -364,6 +364,7 @@ p strong{color:var(--encre);font-weight:600}
   <section class="screen on" id="s-code">
     <div class="spacer"></div>
     <div class="eyebrow center">🔒 Billet nominatif</div>
+    <p class="center" style="font-size:13px;margin-top:8px;opacity:.75">🔊 Il y a du son : vérifie que ton téléphone n'est pas en silencieux.</p>
     <h2 class="mt center">Il te faut le code.</h2>
     <p class="mt center" id="code-aide">Chargement...</p>
     <div class="cases" id="cases" style="margin-top:22px"><i></i><i></i><i></i><i></i></div>
@@ -395,11 +396,11 @@ p strong{color:var(--encre);font-weight:600}
     <div class="mot-titre">Tes lettres · le mot en fait 8</div>
     <div class="letters top" id="letters-saut"></div>
     <h2 class="mt">Saute, ma beauté 💫</h2>
-    <p class="mt" id="saut-txt">Tape l'écran pour sauter par-dessus les blocs. Tiens jusqu'au bout.</p>
+    <p class="mt" id="saut-txt">Tape pour sauter par-dessus les blocs. Mais quand ça vole, reste en bas : sauter, c'est se le prendre en pleine face.</p>
     <canvas class="jeu-canvas mt" id="cv-saut" height="190"></canvas>
     <div class="jauge"><i id="saut-jauge"></i></div>
     <div class="score"><span id="saut-dist">0 %</span><span id="saut-etat">Tape pour démarrer</span></div>
-    <div class="consigne" id="saut-consigne">Tu ne peux pas perdre. Si tu te prends un bloc, tu recules un peu, c'est tout. 😉</div>
+    <div class="consigne" id="saut-consigne">Blocs au sol : tu sautes. Oiseaux et ma tête : tu ne sautes pas. Te tromper te fait juste reculer un peu. 😉</div>
     <button class="btn mt" id="saut-next" style="display:none">Continuer 👉</button>
     <div class="spacer"></div>
   </section>
@@ -443,7 +444,7 @@ p strong{color:var(--encre);font-weight:600}
     <div class="mot-titre">Tes lettres · le mot en fait 8</div>
     <div class="letters top" id="letters-attrape"></div>
     <h2 class="mt">Attrape-moi si tu peux 🏃</h2>
-    <p class="mt">Je me téléporte partout. Tape sur ma tête, dix fois, et de plus en plus vite.</p>
+    <p class="mt">Je me téléporte partout, et je ne reste pas longtemps. Touche ma tête dix fois.</p>
     <canvas class="jeu-canvas mt" id="cv-attrape" height="300"></canvas>
     <div class="jauge"><i id="att-jauge"></i></div>
     <div class="score"><span id="att-score">0 / 10</span><span id="att-etat">Touche l'écran pour lancer</span></div>
@@ -649,8 +650,17 @@ function initAudio(){
   try {
     AC = new Ctx();
     sortie = AC.createGain();
-    sortie.gain.value = .45;          // calibre a l'oreille : audible sans agresser
-    sortie.connect(AC.destination);
+    sortie.gain.value = .95;
+    /* Un compresseur en sortie : sans lui, le reveal (six notes qui se
+       chevauchent) saturerait des qu'on monte le volume. */
+    const limiteur = AC.createDynamicsCompressor();
+    limiteur.threshold.value = -10;
+    limiteur.knee.value = 10;
+    limiteur.ratio.value = 9;
+    limiteur.attack.value = .003;
+    limiteur.release.value = .15;
+    sortie.connect(limiteur);
+    limiteur.connect(AC.destination);
   } catch(_){ AC = null; }
 }
 function reveilAudio(){
@@ -697,21 +707,26 @@ function bruit(duree, o){
 }
 
 const SON = {
-  touche:  ()=> note(680, .05, { type:"triangle", vol:.22 }),
-  effacer: ()=> note(340, .07, { type:"triangle", vol:.18 }),
-  refus:   ()=> note(320, .22, { type:"sawtooth", vol:.16, glide:150 }),
-  ouvre:   ()=> [523,659,784,1047].forEach((f,i)=> note(f, .34, { vol:.26, delai:i*.075, type:"triangle" })),
-  saut:    ()=> note(420, .14, { vol:.22, glide:760 }),
-  aie:     ()=> { bruit(.14, { freq:220, vol:.32, q:.8 }); note(150, .2, { type:"square", vol:.12, glide:80 }); },
-  coup:    ()=> { bruit(.08, { freq:900, vol:.3, q:.7 }); note(190, .1, { type:"square", vol:.16, glide:85 }); },
-  attrape: ()=> note(880, .09, { type:"triangle", vol:.24, glide:1350 }),
-  bravo:   ()=> [523,659,784].forEach((f,i)=> note(f, .26, { vol:.24, delai:i*.065, type:"triangle" })),
-  arrivee: ()=> [659,784,988,1319].forEach((f,i)=> note(f, .34, { vol:.25, delai:i*.08, type:"triangle" })),
-  ko:      ()=> { bruit(.3, { freq:160, vol:.35, q:.6 });
-                  [392,523,659,880].forEach((f,i)=> note(f, .4, { vol:.26, delai:.1 + i*.09, type:"triangle" })); },
-  gratte:  ()=> bruit(.05, { freq:2800, vol:.09, q:.5 }),
-  reveal:  ()=> [392,523,659,784,1047,1319].forEach((f,i)=> note(f, .75, { vol:.26, delai:i*.115, type:"triangle" }))
+  touche:  ()=> note(680, .05, { type:"triangle", vol:.5 }),
+  effacer: ()=> note(340, .07, { type:"triangle", vol:.42 }),
+  refus:   ()=> note(320, .22, { type:"sawtooth", vol:.4, glide:150 }),
+  ouvre:   ()=> [523,659,784,1047].forEach((f,i)=> note(f, .34, { vol:.5, delai:i*.075, type:"triangle" })),
+  saut:    ()=> note(420, .14, { vol:.5, glide:760 }),
+  aie:     ()=> { bruit(.14, { freq:220, vol:.6, q:.8 }); note(150, .2, { type:"square", vol:.3, glide:80 }); },
+  coup:    ()=> { bruit(.08, { freq:900, vol:.58, q:.7 }); note(190, .1, { type:"square", vol:.36, glide:85 }); },
+  attrape: ()=> note(880, .09, { type:"triangle", vol:.5, glide:1350 }),
+  bravo:   ()=> [523,659,784].forEach((f,i)=> note(f, .26, { vol:.48, delai:i*.065, type:"triangle" })),
+  arrivee: ()=> [659,784,988,1319].forEach((f,i)=> note(f, .34, { vol:.5, delai:i*.08, type:"triangle" })),
+  ko:      ()=> { bruit(.3, { freq:160, vol:.6, q:.6 });
+                  [392,523,659,880].forEach((f,i)=> note(f, .4, { vol:.5, delai:.1 + i*.09, type:"triangle" })); },
+  gratte:  ()=> bruit(.05, { freq:2800, vol:.2, q:.5 }),
+  reveal:  ()=> [392,523,659,784,1047,1319].forEach((f,i)=> note(f, .75, { vol:.5, delai:i*.115, type:"triangle" }))
 };
+
+/* iOS suspend l'AudioContext des que la page perd le focus, et le premier
+   geste ne suffit pas toujours : on le reveille a chaque contact. */
+window.addEventListener("pointerdown", reveilAudio, { passive:true });
+document.addEventListener("visibilitychange", ()=>{ if (!document.hidden) reveilAudio(); });
 
 $("son-btn").addEventListener("click", ()=>{
   sonActif = !sonActif;
@@ -926,12 +941,21 @@ function initSaut(){
   };
   for (let i = 0; i < 6; i++) j.decor.push({ x: Math.random()*W, h: 7 + Math.random()*15 });
 
+  /* Deux familles d'obstacles : au sol il faut sauter, en l'air il faut
+     surtout NE PAS sauter. C'est ce choix a faire qui rend le jeu vivant.
+     Deux garde-fous pour que ca reste jouable : jamais deux obstacles trop
+     rapproches, et l'ecart s'agrandit si elle se prend des murs. */
   const poseObstacle = () => {
     const dernier = j.obstacles[j.obstacles.length - 1];
-    /* plus serre qu'avant : le jeu doit demander un vrai effort.
-       Ca se desserre si elle en prend plusieurs, pour ne jamais bloquer. */
-    const ecart = 118 + Math.random()*70 + j.touches*30;
-    if (!dernier || dernier.x < W - ecart) j.obstacles.push({ x: W + 20, w: 13 + Math.random()*10 });
+    const ecart = 150 + Math.random()*75 + j.touches*32;
+    if (dernier && dernier.x > W - ecart) return;
+    const enLair = j.dist > 12 && Math.random() < .42;   // les 12 premiers % sont au sol, le temps de comprendre
+    if (enLair){
+      const moi = Math.random() < .32;                   // parfois c'est ma tete qui arrive
+      j.obstacles.push({ x: W + 26, type:"air", moi, w: moi ? 40 : 30, aile: 0 });
+    } else {
+      j.obstacles.push({ x: W + 20, type:"sol", w: 13 + Math.random()*10 });
+    }
   };
 
   const sauter = () => {
@@ -982,23 +1006,58 @@ function initSaut(){
     j.rot = j.y < sol - 2 ? Math.min(.5, j.rot + .045) : j.rot * .75;
 
     /* obstacles */
+    const Y_AIR = sol - 78;                      // pile dans la trajectoire du saut
     for (const o of j.obstacles){
       if (j.demarre && !j.fini) o.x -= j.vit;
-      ctx.fillStyle = "#9E3F2B";
-      ctx.fillRect(o.x, sol - 27, o.w, 27);
-      ctx.fillStyle = "#E28E6E";
-      ctx.fillRect(o.x, sol - 27, o.w, 5);
+      if (o.type === "air"){
+        o.aile += .28;
+        const bat = Math.sin(o.aile) * 9;
+        if (o.moi && IMAGES.teteLouis){
+          ctx.drawImage(IMAGES.teteLouis, o.x, Y_AIR - 20, 40, 40);
+          ctx.strokeStyle = "#5C6B7A"; ctx.lineWidth = 3; ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(o.x + 2, Y_AIR); ctx.lineTo(o.x - 13, Y_AIR - bat);
+          ctx.moveTo(o.x + 38, Y_AIR); ctx.lineTo(o.x + 53, Y_AIR - bat);
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = "#5C6B7A";
+          ctx.beginPath(); ctx.ellipse(o.x + 15, Y_AIR, 13, 8, 0, 0, Math.PI*2); ctx.fill();
+          ctx.strokeStyle = "#5C6B7A"; ctx.lineWidth = 3.5; ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(o.x + 8, Y_AIR - 2);  ctx.lineTo(o.x - 6, Y_AIR - 4 - bat);
+          ctx.moveTo(o.x + 22, Y_AIR - 2); ctx.lineTo(o.x + 36, Y_AIR - 4 - bat);
+          ctx.stroke();
+          ctx.fillStyle = "#B58A2B";
+          ctx.beginPath();
+          ctx.moveTo(o.x + 2, Y_AIR); ctx.lineTo(o.x - 6, Y_AIR + 2); ctx.lineTo(o.x + 2, Y_AIR + 4);
+          ctx.closePath(); ctx.fill();
+        }
+      } else {
+        ctx.fillStyle = "#9E3F2B";
+        ctx.fillRect(o.x, sol - 27, o.w, 27);
+        ctx.fillStyle = "#E28E6E";
+        ctx.fillRect(o.x, sol - 27, o.w, 5);
+      }
     }
-    j.obstacles = j.obstacles.filter(o => o.x > -40);
+    j.obstacles = j.obstacles.filter(o => o.x > -60);
 
     /* collision : on recule, on ne perd jamais */
     const TAILLE = 46;
     if (!j.fini && j.flash <= 0){
+      const gauche = 34 + TAILLE*.18, droite = 34 + TAILLE*.62;
+      const hautTete = j.y - TAILLE*.78, basTete = j.y;
       for (const o of j.obstacles){
-        if (o.x < 34 + TAILLE*.62 && o.x + o.w > 34 + TAILLE*.18 && j.y > sol - TAILLE*.62){
+        const largeur = o.type === "air" ? o.w : o.w;
+        if (o.x > droite || o.x + largeur < gauche) continue;
+        const touche = o.type === "air"
+          ? (hautTete < Y_AIR + 14 && basTete > Y_AIR - 22)   // seulement si elle a saute
+          : (j.y > sol - TAILLE*.62);
+        if (touche){
           j.touches++; j.flash = 32;
           j.dist = Math.max(0, j.dist - 8);
-          $("saut-etat").textContent = "Aïe 😬 On repart";
+          $("saut-etat").textContent = o.type === "air"
+            ? "Fallait pas sauter 😬"
+            : "Aïe 😬 On repart";
           buzz([12,50,12]);
           SON.aie();
           break;
@@ -1063,7 +1122,7 @@ function initAttrape(){
 
   const j = {
     prises: 0, x: W/2, y: H/2, fini: false, demarre: false,
-    delai: 1500, restant: 1, bulle: null, bulleT: 0, apparu: 0, rates: 0
+    delai: 1150, restant: 1, bulle: null, bulleT: 0, apparu: 0, rates: 0
   };
 
   function teleporte(){
@@ -1085,9 +1144,9 @@ function initAttrape(){
     if (!j.demarre){ j.demarre = true; teleporte(); $("att-etat").textContent = "Vas-y !"; return; }
     const r = cv.getBoundingClientRect();
     const px = e.clientX - r.left, py = e.clientY - r.top;
-    if (Math.hypot(px - j.x, py - j.y) < T*.58){
+    if (Math.hypot(px - j.x, py - j.y) < T*.5){
       j.prises++;
-      j.delai = Math.max(680, j.delai - 78);        // ca se resserre a chaque fois
+      j.delai = Math.max(520, j.delai - 62);        // ca se resserre a chaque fois
       j.bulle = TOUCHES[j.prises % TOUCHES.length];
       j.bulleT = 42;
       buzz(8); SON.coup();
@@ -1127,6 +1186,7 @@ function initAttrape(){
       if (j.restant <= 0){
         j.bulle = VANTARDISES[(j.rates++) % VANTARDISES.length];
         j.bulleT = 40;
+        note(700, .12, { type:"triangle", vol:.34, glide:280 });   // le bruit de ma fuite
         teleporte();
       }
     }
@@ -1202,7 +1262,7 @@ function initSimon(){
 
   function allume(i, duree){
     pads[i].classList.add("on");
-    note(NOTES[i], .3, { type:"triangle", vol:.26 });
+    note(NOTES[i], .3, { type:"triangle", vol:.5 });
     attendre(duree, ()=> pads[i].classList.remove("on"));
   }
 
@@ -1287,7 +1347,7 @@ function initCombat(){
   const PIQUES = [
     "Neiiiin", "Jsuis cuit", "Par pitiééé", "Aïe aïe aïe",
     "Pas les lunettes !", "J'ai rien fait moi", "Doucement !", "Bon ça va...",
-    "Tu t'entraînes ou quoi", "J'abandonne", "Ouille", "Arrête steuplé"
+    "Tu t'entraînes ou quoi", "J'abandonne", "Ouille", "Tchié la boss !"
   ];
   const RIPOSTES = ["À mon tour !", "Tiens !", "Et voilà !", "Attrape ça"];
 
